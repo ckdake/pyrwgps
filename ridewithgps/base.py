@@ -1,6 +1,7 @@
 import json
 import urllib3
 import certifi
+
 try:
     from urllib import urlencode
 except ImportError:
@@ -8,19 +9,19 @@ except ImportError:
 
 
 class APIClient(object):
-    BASE_URL = 'http://localhost:5000/'
+    BASE_URL = "http://localhost:5000/"
 
-    def __init__(self, rate_limit_lock=None, encoding='utf8'):
+    def __init__(self, rate_limit_lock=None, encoding="utf8"):
         self.rate_limit_lock = rate_limit_lock
         self.encoding = encoding
         self.connection_pool = self._make_connection_pool()
 
     def _make_connection_pool(self):
-        return urllib3.PoolManager( cert_reqs='CERT_REQUIRED', ca_certs=certifi.where())
+        return urllib3.PoolManager(cert_reqs="CERT_REQUIRED", ca_certs=certifi.where())
 
     def _compose_url(self, path, params=None):
         print(params)
-        return self.BASE_URL + path + '?' + urlencode(params)
+        return self.BASE_URL + path + "?" + urlencode(params)
 
     def _handle_response(self, response):
         return json.loads(response.data.decode(self.encoding))
@@ -36,11 +37,11 @@ class APIClient(object):
         return self._handle_response(r)
 
     def call(self, path, params=None):
-        return self._request('GET', path, params=params)
+        return self._request("GET", path, params=params)
 
 
 class APIClient_SharedSecret(APIClient):
-    API_KEY_PARAM = 'key'
+    API_KEY_PARAM = "key"
 
     def __init__(self, api_key, *args, **kw):
         super(APIClient_SharedSecret, self).__init__(*args, **kw)
@@ -53,4 +54,4 @@ class APIClient_SharedSecret(APIClient):
         if params:
             p.update(params)
 
-        return self.BASE_URL + path + '?' + urlencode(p)
+        return self.BASE_URL + path + "?" + urlencode(p)

@@ -1,3 +1,10 @@
 *.swp
 env
 __pycache__
+.pytest_cache
+build/
+dist/
+ridewithgps.egg-info/
+.coverage
+tests/cassettes/*.original
+.DS_Store
