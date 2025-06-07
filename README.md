@@ -88,6 +88,7 @@ if hasattr(response, "trip") and getattr(response.trip, "gear_id", None) == gear
     print("Gear updated successfully!")
 else:
     print("Failed to update gear.")
+```
 
 **Note:**  
 - All API responses are automatically converted from JSON to Python objects with attribute access.
