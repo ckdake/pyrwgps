@@ -39,7 +39,12 @@ from ridewithgps import RideWithGPS
 client = RideWithGPS(api_key="yourapikey")
 
 # Authenticate client and return user_info as an object
-user_info = client.authenticate(email="your@email.com", password="yourpassword")
+try:
+    user_info = client.authenticate(email="your@email.com", password="yourpassword")
+except RideWithGPSAPIError as e:
+    print("API error:", e)
+    # Optionally inspect e.response for more details
+
 print(user_info.id, user_info.display_name)
 
 # Update the name of an activity (trip)

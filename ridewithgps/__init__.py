@@ -1,10 +1,12 @@
-from .base import APIClient, APIClient_SharedSecret
+"""Public API exports for the ridewithgps package."""
+
+from .base import APIClient, APIClientSharedSecret
 from .ratelimiter import RateLimiter
 from .ridewithgps import RideWithGPS
 
 __all__ = [
     "APIClient",
-    "APIClient_SharedSecret",
+    "APIClientSharedSecret",
     "RateLimiter",
     "RideWithGPS",
 ]

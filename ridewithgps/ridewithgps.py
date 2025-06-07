@@ -1,10 +1,26 @@
+"""Main RideWithGPS API client."""
+
 import json
 from types import SimpleNamespace
-from typing import Any, Dict, Optional, List
+from typing import Any, Dict, Optional
 from ridewithgps import APIClient
 
 
+class RideWithGPSError(Exception):
+    """Base exception for RideWithGPS client errors."""
+
+
+class RideWithGPSAPIError(RideWithGPSError):
+    """Exception for API errors (e.g., HTTP errors, API error responses)."""
+
+    def __init__(self, message: str, response: Any = None):
+        super().__init__(message)
+        self.response = response
+
+
 class RideWithGPS(APIClient):
+    """Main RideWithGPS API client."""
+
     BASE_URL = "https://ridewithgps.com/"
 
     def __init__(self, api_key: str, version: int = 2, *args: object, **kwargs: object):
@@ -17,7 +33,7 @@ class RideWithGPS(APIClient):
     def _to_obj(self, data: Any) -> Any:
         if isinstance(data, dict):
             return SimpleNamespace(**{k: self._to_obj(v) for k, v in data.items()})
-        elif isinstance(data, list):
+        if isinstance(data, list):
             return [self._to_obj(i) for i in data]
         return data
 
@@ -40,7 +56,6 @@ class RideWithGPS(APIClient):
             params = {}
         params.setdefault("apikey", self.api_key)
         params.setdefault("version", self.version)
-        # Automatically add auth_token if authenticated and not already present
         if self.auth_token and "auth_token" not in params:
             params["auth_token"] = self.auth_token
         response = super().call(endpoint, params, method=method, *args, **kwargs)
@@ -48,23 +63,54 @@ class RideWithGPS(APIClient):
         if isinstance(response, str):
             try:
                 data = json.loads(response)
+                if isinstance(data, dict) and ("error" in data or "errors" in data):
+                    message = (
+                        data.get("error") or data.get("errors") or "Unknown API error"
+                    )
+                    raise RideWithGPSAPIError(str(message), response=data)
                 return self._to_obj(data)
-            except Exception:
-                return response
+            except json.JSONDecodeError as exc:
+                raise RideWithGPSAPIError(
+                    "Invalid JSON response", response=response
+                ) from exc
         return response
 
-    def get(self, endpoint: str, params: Optional[Dict[str, Any]] = None, *args: object, **kwargs: object) -> Any:
+    def get(
+        self,
+        endpoint: str,
+        params: Optional[Dict[str, Any]] = None,
+        *args: object,
+        **kwargs: object,
+    ) -> Any:
         """Make a GET request to the API and return a Python object."""
-        return self.call(endpoint, params, method="GET", *args, **kwargs)
+        return self.call(endpoint, params, "GET", *args, **kwargs)
 
-    def put(self, endpoint: str, params: Optional[Dict[str, Any]] = None, *args: object, **kwargs: object) -> Any:
+    def put(
+        self,
+        endpoint: str,
+        params: Optional[Dict[str, Any]] = None,
+        *args: object,
+        **kwargs: object,
+    ) -> Any:
         """Make a PUT request to the API and return a Python object."""
-        return self.call(endpoint, params, method="PUT", *args, **kwargs)
+        return self.call(endpoint, params, "PUT", *args, **kwargs)
 
-    def post(self, endpoint: str, params: Optional[Dict[str, Any]] = None, *args: object, **kwargs: object) -> Any:
+    def post(
+        self,
+        endpoint: str,
+        params: Optional[Dict[str, Any]] = None,
+        *args: object,
+        **kwargs: object,
+    ) -> Any:
         """Make a POST request to the API and return a Python object."""
-        return self.call(endpoint, params, method="POST", *args, **kwargs)
+        return self.call(endpoint, params, "POST", *args, **kwargs)
 
-    def delete(self, endpoint: str, params: Optional[Dict[str, Any]] = None, *args: object, **kwargs: object) -> Any:
+    def delete(
+        self,
+        endpoint: str,
+        params: Optional[Dict[str, Any]] = None,
+        *args: object,
+        **kwargs: object,
+    ) -> Any:
         """Make a DELETE request to the API and return a Python object."""
-        return self.call(endpoint, params, method="DELETE", *args, **kwargs)
+        return self.call(endpoint, params, "DELETE", *args, **kwargs)

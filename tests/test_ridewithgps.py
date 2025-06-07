@@ -1,5 +1,5 @@
 import pytest
-from ridewithgps.ridewithgps import RideWithGPS
+from ridewithgps.ridewithgps import RideWithGPS, RideWithGPSAPIError
 
 
 class DummyAPIClient:
@@ -66,3 +66,17 @@ def test_delete_removes_resource(ridewithgps):
     assert hasattr(response, "result")
     assert response.result == "deleted"
     assert response.id == 42
+
+
+def test_api_error_raises_exception(ridewithgps, monkeypatch):
+    # Patch DummyAPIClient.call to return an error response
+    def error_call(self, endpoint, params=None, method="GET", *args, **kwargs):
+        return '{"error": "Invalid credentials"}'
+
+    monkeypatch.setattr(DummyAPIClient, "call", error_call)
+
+    with pytest.raises(RideWithGPSAPIError) as excinfo:
+        ridewithgps.get("/users/current.json", {"email": "bad", "password": "bad"})
+    assert "Invalid credentials" in str(excinfo.value)
+    assert hasattr(excinfo.value, "response")
+    assert excinfo.value.response["error"] == "Invalid credentials"

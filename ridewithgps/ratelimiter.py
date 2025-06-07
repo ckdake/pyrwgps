@@ -1,51 +1,68 @@
+"""Rate limiting utilities for the ridewithgps package."""
+
 import time
 from threading import Lock
 from typing import Optional
 
 
 class RateExceededError(Exception):
-    pass
+    """Exception raised when the rate limit is exceeded."""
 
 
-class RateLimiter(object):
+class RateLimiter:
+    """A simple thread-safe rate limiter."""
+
     def __init__(self, max_messages: int = 10, every_seconds: int = 1):
+        """
+        Initialize the rate limiter.
+
+        Args:
+            max_messages: Maximum number of messages allowed per window.
+            every_seconds: Length of the rate window in seconds.
+        """
         self.max_messages = max_messages
         self.every_seconds = every_seconds
         self.lock = Lock()
-
         self._reset_window()
 
     def _reset_window(self):
+        """Reset the rate window."""
         self.window_num = 0
         self.window_time = time.time()
 
     def acquire(self, block: bool = True, timeout: Optional[float] = None):
-        self.lock.acquire()
+        """
+        Acquire permission to proceed, enforcing the rate limit.
 
-        now = time.time()
-        if now - self.window_time > self.every_seconds:
-            # New rate window
-            self._reset_window()
+        Args:
+            block: If False, raise immediately if rate limit is exceeded.
+            timeout: Maximum time to wait for a slot.
 
-        if self.window_num >= self.max_messages:
-            # Rate exceeding
-            if not block:
+        Raises:
+            RateExceededError: If the rate limit is exceeded and block is False or timeout is reached.
+        """
+        with self.lock:
+            now = time.time()
+            if now - self.window_time > self.every_seconds:
+                # New rate window
+                self._reset_window()
+
+            if self.window_num >= self.max_messages:
+                # Rate exceeding
+                if not block:
+                    raise RateExceededError()
+
+                wait_time = self.window_time + self.every_seconds - now
+                if timeout and wait_time > timeout:
+                    time.sleep(timeout)
+                    raise RateExceededError()
+
+                # Release lock while sleeping, then reacquire using 'with'
                 self.lock.release()
-                raise RateExceededError()
+                try:
+                    time.sleep(wait_time)
+                finally:
+                    self.lock.acquire()
+                self._reset_window()
 
-            wait_time = self.window_time + self.every_seconds - now
-            if timeout and wait_time > timeout:
-                self.lock.release()
-                time.sleep(timeout)
-
-                raise RateExceededError()
-
-            self.lock.release()
-            time.sleep(wait_time)
-            self.lock.acquire()
-
-            self._reset_window()
-
-        self.window_num += 1
-
-        self.lock.release()
+            self.window_num += 1

@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch, MagicMock
-from ridewithgps.base import APIClient, APIClient_SharedSecret
+from ridewithgps.base import APIClient, APIClientSharedSecret
 
 
 class TestAPIClient(unittest.TestCase):
@@ -23,7 +23,7 @@ class TestAPIClient(unittest.TestCase):
 
 class TestAPIClientSharedSecret(unittest.TestCase):
     def test_compose_url_includes_api_key(self):
-        client = APIClient_SharedSecret(api_key="abc123")
+        client = APIClientSharedSecret(api_key="abc123")
         client.connection_pool = MagicMock()
         mock_response = MagicMock()
         mock_response.data = b'{"ok": true}'
