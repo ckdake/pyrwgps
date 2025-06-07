@@ -46,11 +46,11 @@ class RideWithGPS(APIClient):
 
     def call(
         self,
-        endpoint: str,
-        params: Optional[Dict[str, Any]] = None,
-        method: str = "GET",
-        *args: object,
-        **kwargs: object,
+        path: Any,
+        params: Any = None,
+        method: Any = "GET",
+        *args: Any,
+        **kwargs: Any,
     ) -> Any:
         if params is None:
             params = {}
@@ -58,8 +58,7 @@ class RideWithGPS(APIClient):
         params.setdefault("version", self.version)
         if self.auth_token and "auth_token" not in params:
             params["auth_token"] = self.auth_token
-        response = super().call(endpoint, params, method=method, *args, **kwargs)
-        # Convert string to Python object if possible, all responses should be JSON
+        response = super().call(path, params, method, *args, **kwargs)
         if isinstance(response, str):
             try:
                 data = json.loads(response)
@@ -79,8 +78,8 @@ class RideWithGPS(APIClient):
         self,
         endpoint: str,
         params: Optional[Dict[str, Any]] = None,
-        *args: object,
-        **kwargs: object,
+        *args: Any,
+        **kwargs: Any,
     ) -> Any:
         """Make a GET request to the API and return a Python object."""
         return self.call(endpoint, params, "GET", *args, **kwargs)
@@ -89,8 +88,8 @@ class RideWithGPS(APIClient):
         self,
         endpoint: str,
         params: Optional[Dict[str, Any]] = None,
-        *args: object,
-        **kwargs: object,
+        *args: Any,
+        **kwargs: Any,
     ) -> Any:
         """Make a PUT request to the API and return a Python object."""
         return self.call(endpoint, params, "PUT", *args, **kwargs)
@@ -99,8 +98,8 @@ class RideWithGPS(APIClient):
         self,
         endpoint: str,
         params: Optional[Dict[str, Any]] = None,
-        *args: object,
-        **kwargs: object,
+        *args: Any,
+        **kwargs: Any,
     ) -> Any:
         """Make a POST request to the API and return a Python object."""
         return self.call(endpoint, params, "POST", *args, **kwargs)
@@ -109,8 +108,8 @@ class RideWithGPS(APIClient):
         self,
         endpoint: str,
         params: Optional[Dict[str, Any]] = None,
-        *args: object,
-        **kwargs: object,
+        *args: Any,
+        **kwargs: Any,
     ) -> Any:
         """Make a DELETE request to the API and return a Python object."""
         return self.call(endpoint, params, "DELETE", *args, **kwargs)

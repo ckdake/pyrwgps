@@ -1,14 +1,11 @@
 """Base HTTP client and shared secret client for the ridewithgps package."""
 
 import json
+from urllib.parse import urlencode
+
 import urllib3
 import certifi
 from .ratelimiter import RateLimiter
-
-try:
-    from urllib import urlencode
-except ImportError:
-    from urllib.parse import urlencode
 
 
 class APIClient:

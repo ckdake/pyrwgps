@@ -23,3 +23,10 @@ PyPI = "https://pypi.org/project/ridewithgps/"
 [build-system]
 requires = ["hatchling >= 1.26"]
 build-backend = "hatchling.build"
+
+[tool.mypy]
+# ...other mypy config...
+
+[[tool.mypy.overrides]]
+module = "urllib3.*"
+ignore_missing_imports = true
