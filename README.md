@@ -50,15 +50,13 @@ Then, in your Python code:
 ```python
 from ridewithgps import RideWithGPS
 
-# Create a client instance (optionally pass API key or authentication info if needed)
-client = RideWithGPS()
+# Create a client instance (API key is required)
+client = RideWithGPS(api_key="yourapikey")
 
 # Example: Fetch current user info (you may need to authenticate first)
 user_info = client.call("/users/current.json", {
     "email": "your@email.com",
-    "password": "yourpassword",
-    "apikey": "yourapikey",
-    "version": 2
+    "password": "yourpassword"
 })
 print(user_info)
 
@@ -66,8 +64,6 @@ print(user_info)
 rides = client.call(f"/users/{user_info['user']['id']}/trips.json", {
     "offset": 0,
     "limit": 20,
-    "apikey": "yourapikey",
-    "version": 2,
     "auth_token": user_info['user']['auth_token']
 })
 print(rides)
@@ -136,7 +132,7 @@ Run these tools locally to check and format your code:
 
 2. **Run tests:**
    ```sh
-   pytest
+   python -m pytest --cov=ridewithgps --cov-report=term-missing -v
    ```
 
 ---

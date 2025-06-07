@@ -2,6 +2,7 @@ import time
 import unittest
 from ridewithgps.ratelimiter import RateLimiter
 
+
 class TestRateLimiter(unittest.TestCase):
     def test_acquire_blocks_when_exhausted(self):
         rl = RateLimiter(2, 1)  # 2 tokens per 1 second
@@ -16,6 +17,7 @@ class TestRateLimiter(unittest.TestCase):
         rl = RateLimiter(1, 1)
         r = repr(rl)
         self.assertIn("RateLimiter", r)
+
 
 if __name__ == "__main__":
     unittest.main()
