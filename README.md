@@ -39,13 +39,43 @@ pip install -e . -r requirements-dev.txt
 
 ## Usage
 
+First, install the package:
+
+```sh
+pip install ridewithgps
+```
+
+Then, in your Python code:
+
 ```python
 from ridewithgps import RideWithGPS
 
-client = RideWithGPS(api_key='YOUR_API_KEY')
-routes = client.get_routes()
-print(routes)
+# Create a client instance (optionally pass API key or authentication info if needed)
+client = RideWithGPS()
+
+# Example: Fetch current user info (you may need to authenticate first)
+user_info = client.call("/users/current.json", {
+    "email": "your@email.com",
+    "password": "yourpassword",
+    "apikey": "yourapikey",
+    "version": 2
+})
+print(user_info)
+
+# Example: Fetch 20 rides for a user (replace user_id and auth_token as needed)
+rides = client.call(f"/users/{user_info['user']['id']}/trips.json", {
+    "offset": 0,
+    "limit": 20,
+    "apikey": "yourapikey",
+    "version": 2,
+    "auth_token": user_info['user']['auth_token']
+})
+print(rides)
 ```
+
+**Note:**  
+- You must provide your own RideWithGPS credentials and API key.
+- The `call` method is a thin wrapper for making API requests; see the code and [RideWithGPS API docs](https://ridewithgps.com/api) for available endpoints and parameters.
 
 ## Development
 
