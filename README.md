@@ -9,6 +9,7 @@ all of the code first. I'll remove this notice once I'm actually using this pack
 
 - Authenticate with the [RideWithGPS API](https://ridewithgps.com/api)
 - Make basic API requests (routes, activities, etc.)
+- Built-in rate limiting
 - Lightweight and easy to use
 
 ## Installation
@@ -56,9 +57,21 @@ client = RideWithGPS(api_key="yourapikey")
 user_info = client.authenticate(email="your@email.com", password="yourpassword")
 print(user_info)
 
-# You can then call any api method using .call, e.g.:
-# * Get a list of 20 rides for this user.
-rides = client.call(f"/users/{user_info['id']}/trips.json", {
+# Update the name of an activity (trip)
+activity_id = "123456"
+new_name = "Morning Ride"
+response = client.put(
+    f"/trips/{activity_id}.json",
+    {"name": new_name}
+)
+updated_name = response.get("trip", {}).get("name")
+if updated_name == new_name:
+    print(f"Activity name updated to: {updated_name}")
+else:
+    print("Failed to update activity name.")
+
+# You can also get a list of 20 rides for this user:
+rides = client.get(f"/users/{user_info['id']}/trips.json", {
     "offset": 0,
     "limit": 20
 })
@@ -67,7 +80,7 @@ print(rides)
 
 **Note:**  
 - You must provide your own RideWithGPS credentials and API key.
-- The `call` method is a thin wrapper for making API requests; see the code and [RideWithGPS API docs](https://ridewithgps.com/api) for available endpoints and parameters.
+- The `get` and `put` methods are the recommended interface for making API requests; see the code and [RideWithGPS API docs](https://ridewithgps.com/api) for available endpoints and parameters.
 
 ## Development
 

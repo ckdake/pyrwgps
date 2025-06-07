@@ -13,7 +13,7 @@ class RideWithGPS(APIClient):
 
     def authenticate(self, email: str, password: str):
         """Authenticate and store user info and auth token for future requests."""
-        resp = self.call(
+        resp = self.get(
             "/users/current.json",
             {"email": email, "password": password}
         )
@@ -25,6 +25,7 @@ class RideWithGPS(APIClient):
         self,
         endpoint: str,
         params: dict[str, object] | None = None,
+        method: str = "GET",
         *args: object,
         **kwargs: object
     ):
@@ -35,4 +36,12 @@ class RideWithGPS(APIClient):
         # Automatically add auth_token if authenticated and not already present
         if self.auth_token and "auth_token" not in params:
             params["auth_token"] = self.auth_token
-        return super().call(endpoint, params, *args, **kwargs)
+        return super().call(endpoint, params, method=method, *args, **kwargs)
+
+    def get(self, endpoint, params=None, *args, **kwargs):
+        """Make a GET request to the API."""
+        return self.call(endpoint, params, method="GET", *args, **kwargs)
+
+    def put(self, endpoint, params=None, *args, **kwargs):
+        """Make a PUT request to the API."""
+        return self.call(endpoint, params, method="PUT", *args, **kwargs)
