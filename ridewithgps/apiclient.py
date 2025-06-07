@@ -4,14 +4,16 @@ import json
 from urllib.parse import urlencode
 
 from types import SimpleNamespace
-from typing import Any, Dict, Optional
+from typing import Any
 
 import urllib3
 import certifi
 from .ratelimiter import RateLimiter
 
+
 class APIError(Exception):
     """Base exception for API client errors."""
+
 
 class APIClient:
     """Base HTTP client for RideWithGPS API."""
@@ -54,8 +56,7 @@ class APIClient:
         """Compose a full URL from path and query parameters."""
         if params:
             return self.BASE_URL + path + "?" + urlencode(params)
-        else:
-            return self.BASE_URL + path
+        return self.BASE_URL + path
 
     def _handle_response(self, response):
         """Decode and parse the HTTP response as JSON."""
@@ -68,14 +69,13 @@ class APIClient:
             self.rate_limit_lock.acquire()
         r = self.connection_pool.urlopen(method.upper(), url)
         return self._handle_response(r)
-    
+
     def _to_obj(self, data: Any) -> Any:
         if isinstance(data, dict):
             return SimpleNamespace(**{k: self._to_obj(v) for k, v in data.items()})
         if isinstance(data, list):
             return [self._to_obj(i) for i in data]
         return data
-
 
     def call(self, *args, path, params=None, method="GET", **kwargs):
         """
@@ -99,9 +99,7 @@ class APIClient:
                     raise APIError(str(message))
                 return self._to_obj(data)
             except json.JSONDecodeError as exc:
-                raise APIError(
-                    "Invalid JSON response"
-                ) from exc
+                raise APIError("Invalid JSON response") from exc
         return self._to_obj(response)
 
 

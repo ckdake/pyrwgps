@@ -1,9 +1,9 @@
 """Main RideWithGPS API client."""
 
-import json
 from types import SimpleNamespace
 from typing import Any, Dict, Optional
 from ridewithgps.apiclient import APIClientSharedSecret
+
 
 class RideWithGPS(APIClientSharedSecret):
     """Main RideWithGPS API client."""
@@ -16,7 +16,6 @@ class RideWithGPS(APIClientSharedSecret):
         self.version: int = version
         self.user_info: Optional[SimpleNamespace] = None
         self.auth_token: Optional[str] = None
-
 
     def authenticate(self, email: str, password: str) -> Optional[SimpleNamespace]:
         """Authenticate and store user info and auth token for future requests."""

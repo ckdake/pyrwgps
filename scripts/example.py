@@ -2,9 +2,10 @@ import sys
 import os
 
 # Add the parent directory to the Python path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from ridewithgps import RideWithGPS
+
 
 def main():
     username = os.environ.get("RIDEWITHGPS_EMAIL")
@@ -19,11 +20,11 @@ def main():
 
     # Get a list of 20 rides for this user (returned as objects)
     rides = client.get(
-        path=f"/users/{user_info.id}/trips.json", 
-        params = {"offset": 0, "limit": 20}
+        path=f"/users/{user_info.id}/trips.json", params={"offset": 0, "limit": 20}
     )
     for ride in rides.results:
         print(ride.name, ride.id)
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

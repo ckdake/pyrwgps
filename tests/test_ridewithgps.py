@@ -52,7 +52,9 @@ def test_authenticate_sets_user_info_and_token(ridewithgps):
 
 def test_get_returns_python_object(ridewithgps):
     ridewithgps.authenticate(email="test@example.com", password="pw")
-    rides = ridewithgps.get(path="/users/1/trips.json", params={"offset": 0, "limit": 2})
+    rides = ridewithgps.get(
+        path="/users/1/trips.json", params={"offset": 0, "limit": 2}
+    )
     assert hasattr(rides, "results")
     assert isinstance(rides.results, list)
     assert rides.results[0].name == "Ride 1"

@@ -6,6 +6,7 @@ from ridewithgps import RideWithGPS
 import logging
 import http.client as http_client
 
+
 def scrub_sensitive_data(request):
     import urllib.parse
 
@@ -59,7 +60,9 @@ def test_fetch_20_rides():
 
     client = RideWithGPS(apikey=apikey)
     user_info = client.authenticate(email=username, password=password)
-    assert user_info is not None, "Authentication failed: check credentials and cassette"
+    assert (
+        user_info is not None
+    ), "Authentication failed: check credentials and cassette"
     userid = user_info.id
 
     rides = client.get(
