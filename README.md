@@ -56,7 +56,8 @@ client = RideWithGPS(api_key="yourapikey")
 user_info = client.authenticate(email="your@email.com", password="yourpassword")
 print(user_info)
 
-# Get a list of 20 rides for this user.
+# You can then call any api method using .call, e.g.:
+# * Get a list of 20 rides for this user.
 rides = client.call(f"/users/{user_info['id']}/trips.json", {
     "offset": 0,
     "limit": 20
