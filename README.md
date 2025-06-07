@@ -9,7 +9,10 @@ Also Note: The Ride With GPS API is JSON based and under active development. It
 doesn't have full documentation published, and the best way to figure out how
 things work is to use the dev tools in your browser to watch actual requests.
 
----
+[![PyPI version](https://img.shields.io/pypi/v/ridewithgps.svg)](https://pypi.org/project/ridewithgps/)
+[![PyPI downloads](https://img.shields.io/pypi/dm/ridewithgps.svg)](https://pypi.org/project/ridewithgps/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python versions](https://img.shields.io/pypi/pyversions/ridewithgps.svg)](https://pypi.org/project/ridewithgps/)
 
 [![black](https://github.com/ckdake/python-ridewithgps/actions/workflows/black.yml/badge.svg)](https://github.com/ckdake/python-ridewithgps/actions/workflows/black.yml)
 [![flake8](https://github.com/ckdake/python-ridewithgps/actions/workflows/flake8.yml/badge.svg)](https://github.com/ckdake/python-ridewithgps/actions/workflows/flake8.yml)
