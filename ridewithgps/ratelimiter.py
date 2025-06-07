@@ -1,13 +1,13 @@
 import time
 from threading import Lock
-
+from typing import Optional
 
 class RateExceededError(Exception):
     pass
 
 
 class RateLimiter(object):
-    def __init__(self, max_messages=10, every_seconds=1):
+    def __init__(self, max_messages: int = 10, every_seconds: int = 1):
         self.max_messages = max_messages
         self.every_seconds = every_seconds
         self.lock = Lock()
@@ -18,7 +18,7 @@ class RateLimiter(object):
         self.window_num = 0
         self.window_time = time.time()
 
-    def acquire(self, block=True, timeout=None):
+    def acquire(self, block: bool = True, timeout: Optional[float] = None):
         self.lock.acquire()
 
         now = time.time()

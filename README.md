@@ -50,21 +50,16 @@ Then, in your Python code:
 ```python
 from ridewithgps import RideWithGPS
 
-# Create a client instance (API key is required)
 client = RideWithGPS(api_key="yourapikey")
 
-# Example: Fetch current user info (you may need to authenticate first)
-user_info = client.call("/users/current.json", {
-    "email": "your@email.com",
-    "password": "yourpassword"
-})
+# Authenticate client and return user_info.
+user_info = client.authenticate(email="your@email.com", password="yourpassword")
 print(user_info)
 
-# Example: Fetch 20 rides for a user (replace user_id and auth_token as needed)
-rides = client.call(f"/users/{user_info['user']['id']}/trips.json", {
+# Get a list of 20 rides for this user.
+rides = client.call(f"/users/{user_info['id']}/trips.json", {
     "offset": 0,
-    "limit": 20,
-    "auth_token": user_info['user']['auth_token']
+    "limit": 20
 })
 print(rides)
 ```
