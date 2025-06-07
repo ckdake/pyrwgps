@@ -2,39 +2,20 @@
 
 A simple Python client for the [RideWithGPS API](https://ridewithgps.com/api).
 
-Note: this is super under development and in no way should be used without reading
-all of the code first. I'll remove this notice once I'm actually using this package!
+Note: This isn't used for a lot yet, so it may not work quite right. Read the
+code before you use it, and report any bugs you find.
 
 ## Features
 
-- Authenticate with the [RideWithGPS API](https://ridewithgps.com/api)
-- Make basic API requests (routes, activities, etc.)
+- Authenticates with the [RideWithGPS API](https://ridewithgps.com/api)
+- Makes any API request, get or put, to the API.
 - Built-in rate limiting
-- Lightweight and easy to use
 
 ## Installation
 
 The package is published on [PyPI](https://pypi.org/project/ridewithgps/).
 
 Install the latest release with:
-
-```sh
-pip install ridewithgps
-```
-
-For development, install the dev dependencies:
-
-```sh
-pip install -r requirements-dev.txt
-```
-
-Or, for local development with editable install:
-
-```sh
-git clone https://github.com/ckdake/ridewithgps.git
-cd ridewithgps
-pip install -e . -r requirements-dev.txt
-```
 
 ---
 
@@ -86,16 +67,20 @@ print(rides)
 
 ### Set up environment
 
+If you use this as VS Dev Container, you can skip using a venv.
+
 ```sh
 python3 -m venv env
 source env/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 ```
 
-### Run example script
+Or, for local development with editable install:
 
 ```sh
-python scripts/doit.py
+git clone https://github.com/ckdake/ridewithgps.git
+cd ridewithgps
+pip install -e . -r requirements-dev.txt
 ```
 
 ### Run tests
@@ -132,18 +117,6 @@ Run these tools locally to check and format your code:
     mypy ridewithgps
     ```
 
-## Developer Setup
-
-1. **Install dependencies:**
-   ```sh
-   pip install -r requirements-dev.txt
-   ```
-
-2. **Run tests:**
-   ```sh
-   python -m pytest --cov=ridewithgps --cov-report=term-missing -v
-   ```
-
 ---
 
 ## Updating Integration Cassettes
@@ -162,26 +135,21 @@ If you need to update the VCR cassettes for integration tests:
    export RIDEWITHGPS_KEY=yourapikey
    ```
 
-2. **Delete or move the old cassette (optional, for a clean start):**
+2. **Run the integration test to generate a new cassette:**
    ```sh
-   mv tests/cassettes/ridewithgps_integration.yaml tests/cassettes/ridewithgps_integration.yaml.bak
+   python -m pytest --cov=ridewithgps --cov-report=term-missing -v
    ```
 
-3. **Run the integration test to generate a new cassette:**
-   ```sh
-   pytest -m integration
-   ```
-
-4. **Scrub sensitive data from the cassette:**
+3. **Scrub sensitive data from the cassette:**
    ```sh
    python scripts/scrub_cassette.py
    ```
    - This will back up your cassette to `ridewithgps_integration.yaml.original` (if not already present).
    - The sanitized cassette will overwrite `ridewithgps_integration.yaml`.
 
-5. **Re-run tests to verify:**
+4. **Re-run tests to verify:**
    ```sh
-   pytest
+   python -m pytest --cov=ridewithgps --cov-report=term-missing -v
    ```
 
 ---
@@ -191,7 +159,7 @@ If you need to update the VCR cassettes for integration tests:
 To publish a new version of this package to [PyPI](https://pypi.org/):
 
 1. **Update the version number**  
-   Edit `pyproject.toml` and increment the version.
+   Edit `pyproject.toml` and `setup.py` and increment the version.
 
 2. **Install build tools**  
    ```sh
@@ -213,7 +181,7 @@ To publish a new version of this package to [PyPI](https://pypi.org/):
    ```sh
    twine upload dist/*
    ```
-   You will be prompted for your PyPI username and password.
+   You will be prompted for your PyPI API key.
 
 6. **Open your package on PyPI (optional)**  
    ```sh
@@ -221,7 +189,7 @@ To publish a new version of this package to [PyPI](https://pypi.org/):
    ```
 
 **Note:**  
-- Make sure your `~/.pypirc` is configured if you want to avoid entering credentials each time.
+- Configure your `~/.pypirc` is configured if you want to avoid entering credentials each time.
 - For test uploads, use `twine upload --repository testpypi dist/*` and visit [TestPyPI](https://test.pypi.org/).
 
 ---
@@ -235,4 +203,4 @@ MIT License
 
 ---
 
-*This project is not affiliated with RideWithGPS.*
+*This project is not affiliated with or endorsed by RideWithGPS.*

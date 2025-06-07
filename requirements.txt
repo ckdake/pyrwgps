@@ -1,4 +1,2 @@
-# Only runtime dependencies needed by ridewithgps itself should go here.
-# (If there are no runtime dependencies, this file can be empty or omitted.)
 certifi==2025.4.26
 urllib3==1.26.18

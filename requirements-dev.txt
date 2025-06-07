@@ -1,6 +1,6 @@
-# Development requirements for python-ridewithgps
+certifi==2025.4.26
+urllib3==1.26.18
 
-# Packaging and publishing
 build==1.2.2.post1
 twine==6.1.0
 
