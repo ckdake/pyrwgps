@@ -44,7 +44,9 @@ class APIClient:
 
     def _compose_url(self, path, params=None):
         """Compose a full URL from path and query parameters."""
-        print(params)
+        if params:
+            sanitized_params = {k: (v if k != "password" else "REDACTED") for k, v in params.items()}
+            print(sanitized_params)
         return self.BASE_URL + path + "?" + urlencode(params)
 
     def _handle_response(self, response):
