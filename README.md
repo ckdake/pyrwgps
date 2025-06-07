@@ -127,6 +127,11 @@ pip install -e . .[dev]
 python -m pytest --cov=ridewithgps --cov-report=term-missing -v
 ```
 
+### Run an example
+```sh
+python3 scripts/example.py
+```
+
 ### Linting and Formatting
 
 Run these tools locally to check and format your code:
