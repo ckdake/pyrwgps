@@ -2,8 +2,12 @@
 
 A simple Python client for the [RideWithGPS API](https://ridewithgps.com/api).
 
-Note: This isn't used for a lot yet, so it may not work quite right. Read the
-code before you use it, and report any bugs you find.
+Note: This client isn't used for a lot yet, so it may not work quite right. Read
+the code before you use it, and report any bugs you find.
+
+Also Note: The Ride With GPS API is JSON based and under active development. It
+doesn't have full documentation published, and the best way to figure out how
+things work is to use the dev tools in your browser to watch actual requests.
 
 ## Features
 
@@ -34,9 +38,9 @@ from ridewithgps import RideWithGPS
 
 client = RideWithGPS(api_key="yourapikey")
 
-# Authenticate client and return user_info.
+# Authenticate client and return user_info as an object
 user_info = client.authenticate(email="your@email.com", password="yourpassword")
-print(user_info)
+print(user_info.id, user_info.display_name)
 
 # Update the name of an activity (trip)
 activity_id = "123456"
@@ -45,23 +49,45 @@ response = client.put(
     f"/trips/{activity_id}.json",
     {"name": new_name}
 )
-updated_name = response.get("trip", {}).get("name")
+updated_name = response.trip.name if hasattr(response, "trip") else None
 if updated_name == new_name:
     print(f"Activity name updated to: {updated_name}")
 else:
     print("Failed to update activity name.")
 
-# You can also get a list of 20 rides for this user:
-rides = client.get(f"/users/{user_info['id']}/trips.json", {
+# Get a list of 20 rides for this user (returned as objects)
+rides = client.get(f"/users/{user_info.id}/trips.json", {
     "offset": 0,
     "limit": 20
 })
-print(rides)
-```
+for ride in rides.results:
+    print(ride.name, ride.id)
+
+# Get the gear, and update an activity
+gear = {}
+gear_results = client.get(f"/users/{user_info.id}/gear.json", {
+    "offset": 0,
+    "limit": 100
+}).results
+for g in gear_results:
+    gear[g.id] = g.nickname
+print(gear)
+
+gear_id = "example"
+activity_id = "123456"
+response = client.put(
+    f"/trips/{activity_id}.json",
+    {"gear_id": gear_id}
+)
+if hasattr(response, "trip") and getattr(response.trip, "gear_id", None) == gear_id:
+    print("Gear updated successfully!")
+else:
+    print("Failed to update gear.")
 
 **Note:**  
+- All API responses are automatically converted from JSON to Python objects with attribute access.
 - You must provide your own RideWithGPS credentials and API key.
-- The `get` and `put` methods are the recommended interface for making API requests; see the code and [RideWithGPS API docs](https://ridewithgps.com/api) for available endpoints and parameters.
+- The `get`, `put`, `post`, and `delete` methods are the recommended interface for making API requests; see the code and [RideWithGPS API docs](https://ridewithgps.com/api) for available endpoints and parameters.
 
 ## Development
 

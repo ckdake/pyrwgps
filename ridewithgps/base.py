@@ -12,11 +12,21 @@ except ImportError:
 class APIClient(object):
     BASE_URL = "http://localhost:5000/"
 
-    def __init__(self, rate_limit_lock=None, encoding="utf8", *args, rate_limit_max=10, rate_limit_seconds=1, **kwargs):
+    def __init__(
+        self,
+        rate_limit_lock=None,
+        encoding="utf8",
+        *args,
+        rate_limit_max=10,
+        rate_limit_seconds=1,
+        **kwargs,
+    ):
         self.rate_limit_lock = rate_limit_lock
         self.encoding = encoding
         self.connection_pool = self._make_connection_pool()
-        self.ratelimiter = RateLimiter(max_messages=rate_limit_max, every_seconds=rate_limit_seconds)
+        self.ratelimiter = RateLimiter(
+            max_messages=rate_limit_max, every_seconds=rate_limit_seconds
+        )
 
     def _make_connection_pool(self):
         return urllib3.PoolManager(cert_reqs="CERT_REQUIRED", ca_certs=certifi.where())

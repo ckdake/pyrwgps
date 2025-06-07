@@ -2,6 +2,7 @@ import time
 from threading import Lock
 from typing import Optional
 
+
 class RateExceededError(Exception):
     pass
 
