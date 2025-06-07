@@ -4,10 +4,7 @@ version = "0.0.1"
 authors = [
   { name = "Chris Kelly", email = "ckdake@ckdake.com" },
 ]
-description = "A simple Python client for the [RideWithGPS API](https://ridewithgps.com/api).
-
-Note: this is super under development and in no way should be used without reading
-all of the code first. I'll remove this notice once I'm actually using this package!"
+description = "A Python client for the RideWithGPS API"
 readme = "README.md"
 requires-python = ">=3.12"
 classifiers = [
