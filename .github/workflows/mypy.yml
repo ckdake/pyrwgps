@@ -1,5 +1,7 @@
 name: mypy
 on: [push]
+permissions:
+  contents: read
 jobs:
   run-mypy:
     runs-on: ubuntu-latest

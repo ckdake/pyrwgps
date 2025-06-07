@@ -1,5 +1,7 @@
 name: black
 on: [push]
+permissions:
+  contents: read
 jobs:
   run-black:
     runs-on: ubuntu-latest

@@ -1,5 +1,7 @@
 name: flake8
 on: [push]
+permissions:
+  contents: read
 jobs:
   run-flake8:
     runs-on: ubuntu-latest
