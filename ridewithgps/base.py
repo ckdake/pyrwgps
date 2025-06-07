@@ -44,9 +44,6 @@ class APIClient:
 
     def _compose_url(self, path, params=None):
         """Compose a full URL from path and query parameters."""
-        if params:
-            sanitized_params = {k: (v if k != "password" else "REDACTED") for k, v in params.items()}
-            print(sanitized_params)
         return self.BASE_URL + path + "?" + urlencode(params)
 
     def _handle_response(self, response):
@@ -56,7 +53,6 @@ class APIClient:
     def _request(self, method, path, params=None):
         """Make an HTTP request and return the parsed response."""
         url = self._compose_url(path, params)
-        print(url)
         if self.rate_limit_lock:
             self.rate_limit_lock.acquire()
         r = self.connection_pool.urlopen(method.upper(), url)
