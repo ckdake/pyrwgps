@@ -14,6 +14,10 @@ classifiers = [
 ]
 license = "MIT"
 license-files = ["LICENSE*"]
+dependencies = [
+    "certifi>=2025.4.26",
+    "urllib3>=1.26.19"
+]
 
 [project.urls]
 Homepage = "https://github.com/ckdake/python-ridewithgps"

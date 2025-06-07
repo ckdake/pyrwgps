@@ -115,7 +115,7 @@ If you use this as VS Dev Container, you can skip using a venv.
 ```sh
 python3 -m venv env
 source env/bin/activate
-pip install -r requirements-dev.txt
+pip install -r requirements.txt
 ```
 
 Or, for local development with editable install:
@@ -123,7 +123,7 @@ Or, for local development with editable install:
 ```sh
 git clone https://github.com/ckdake/ridewithgps.git
 cd ridewithgps
-pip install -e . -r requirements-dev.txt
+pip install -e . -r requirements.txt
 ```
 
 ### Run tests
@@ -178,6 +178,7 @@ If you need to update the VCR cassettes for integration tests:
 
 2. **Run the integration test to generate a new cassette:**
    ```sh
+   rm ridewithgps/tests/cassettes/ridewithgps_integration.yaml
    python -m pytest --cov=ridewithgps --cov-report=term-missing -v
    ```
 
@@ -202,7 +203,7 @@ To publish a new version of this package to [PyPI](https://pypi.org/):
 
 2. **Install build tools**  
    ```sh
-   pip install -r requirements-dev.txt
+   pip install -r requirements.txt
    ```
 
 3. **Build the distribution**  
