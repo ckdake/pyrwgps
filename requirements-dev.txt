@@ -5,7 +5,7 @@ build==1.2.2.post1
 twine==6.1.0
 
 pylint==3.1.0
-black==24.4.2
+black==25.1.0
 mypy==1.10.0
 flake8==7.0.0
 
