@@ -30,8 +30,6 @@ things work is to use the dev tools in your browser to watch actual requests.
 
 The package is published on [PyPI](https://pypi.org/project/ridewithgps/).
 
-Install the latest release with:
-
 ---
 
 ## Usage
@@ -106,6 +104,8 @@ else:
 - You must provide your own RideWithGPS credentials and API key.
 - The `get`, `put`, `post`, and `delete` methods are the recommended interface for making API requests; see the code and [RideWithGPS API docs](https://ridewithgps.com/api) for available endpoints and parameters.
 
+---
+
 ## Development
 
 ### Set up environment
@@ -160,9 +160,7 @@ Run these tools locally to check and format your code:
     mypy ridewithgps
     ```
 
----
-
-## Updating Integration Cassettes
+### Updating Integration Cassettes
 
 If you need to update the VCR cassettes for integration tests:
 
@@ -195,9 +193,7 @@ If you need to update the VCR cassettes for integration tests:
    python -m pytest --cov=ridewithgps --cov-report=term-missing -v
    ```
 
----
-
-## Publishing to PyPI
+### Publishing to PyPI
 
 To publish a new version of this package to [PyPI](https://pypi.org/):
 
@@ -239,6 +235,8 @@ To publish a new version of this package to [PyPI](https://pypi.org/):
 
 - [PyPI: ridewithgps](https://pypi.org/project/ridewithgps/)
 - [RideWithGPS API documentation](https://ridewithgps.com/api)
+
+---
 
 ## License
 
