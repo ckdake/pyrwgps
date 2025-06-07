@@ -39,7 +39,7 @@ class RateLimiter:
             timeout: Maximum time to wait for a slot.
 
         Raises:
-            RateExceededError: If the rate limit is exceeded and block is False or timeout is reached.
+            RateExceededError: If the rate limit is exceeded and block is False or timeout reached.
         """
         with self.lock:
             now = time.time()
