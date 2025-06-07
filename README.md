@@ -136,6 +136,46 @@ If you need to update the VCR cassettes for integration tests:
 
 ---
 
+## Publishing to PyPI
+
+To publish a new version of this package to [PyPI](https://pypi.org/):
+
+1. **Update the version number**  
+   Edit `setup.py` (or `pyproject.toml` if using PEP 517/518) and increment the version.
+
+2. **Install build tools**  
+   ```sh
+   pip install build twine
+   ```
+
+3. **Build the distribution**  
+   ```sh
+   python -m build
+   ```
+   This will create `dist/ridewithgps-<version>.tar.gz` and `.whl` files.
+
+4. **Check the distribution (optional but recommended)**  
+   ```sh
+   twine check dist/*
+   ```
+
+5. **Upload to PyPI**  
+   ```sh
+   twine upload dist/*
+   ```
+   You will be prompted for your PyPI username and password.
+
+6. **Open your package on PyPI (optional)**  
+   ```sh
+   $BROWSER https://pypi.org/project/ridewithgps/
+   ```
+
+**Note:**  
+- Make sure your `~/.pypirc` is configured if you want to avoid entering credentials each time.
+- For test uploads, use `twine upload --repository testpypi dist/*` and visit [TestPyPI](https://test.pypi.org/).
+
+---
+
 For more details on the API, see the [RideWithGPS API documentation](https://ridewithgps.com/api).
 
 ## License
