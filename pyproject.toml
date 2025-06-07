@@ -19,6 +19,22 @@ dependencies = [
     "urllib3>=1.26.19"
 ]
 
+[project.optional-dependencies]
+dev = [
+  "certifi==2025.4.26",
+  "urllib3==1.26.19",
+  "build==1.2.2.post1",
+  "twine==6.1.0",
+  "pylint==3.1.0",
+  "black==25.1.0",
+  "mypy==1.16.0",
+  "flake8==7.0.0",
+  "pytest==8.4.0",
+  "pytest-cov==5.0.0",
+  "vcrpy==7.0.0",
+  "pyyaml==6.0.1"
+]
+
 [project.urls]
 Homepage = "https://github.com/ckdake/python-ridewithgps"
 Issues = "https://github.com/ckdake/python-ridewithgps/issues"

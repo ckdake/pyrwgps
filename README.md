@@ -115,7 +115,7 @@ If you use this as VS Dev Container, you can skip using a venv.
 ```sh
 python3 -m venv env
 source env/bin/activate
-pip install -r requirements.txt
+pip install .[dev]
 ```
 
 Or, for local development with editable install:
@@ -123,7 +123,7 @@ Or, for local development with editable install:
 ```sh
 git clone https://github.com/ckdake/ridewithgps.git
 cd ridewithgps
-pip install -e . -r requirements.txt
+pip install -e . .[dev]
 ```
 
 ### Run tests
@@ -203,7 +203,7 @@ To publish a new version of this package to [PyPI](https://pypi.org/):
 
 2. **Install build tools**  
    ```sh
-   pip install -r requirements.txt
+   pip install .[dev]
    ```
 
 3. **Build the distribution**  
