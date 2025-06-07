@@ -9,6 +9,14 @@ Also Note: The Ride With GPS API is JSON based and under active development. It
 doesn't have full documentation published, and the best way to figure out how
 things work is to use the dev tools in your browser to watch actual requests.
 
+---
+
+[![black](https://github.com/ckdake/python-ridewithgps/actions/workflows/black.yml/badge.svg)](https://github.com/ckdake/python-ridewithgps/actions/workflows/black.yml)
+[![flake8](https://github.com/ckdake/python-ridewithgps/actions/workflows/flake8.yml/badge.svg)](https://github.com/ckdake/python-ridewithgps/actions/workflows/flake8.yml)
+[![mypy](https://github.com/ckdake/python-ridewithgps/actions/workflows/mypy.yml/badge.svg)](https://github.com/ckdake/python-ridewithgps/actions/workflows/mypy.yml)
+[![pylint](https://github.com/ckdake/python-ridewithgps/actions/workflows/pylint.yml/badge.svg)](https://github.com/ckdake/python-ridewithgps/actions/workflows/pylint.yml)
+[![pytest](https://github.com/ckdake/python-ridewithgps/actions/workflows/pytest.yml/badge.svg)](https://github.com/ckdake/python-ridewithgps/actions/workflows/pytest.yml)
+
 ## Features
 
 - Authenticates with the [RideWithGPS API](https://ridewithgps.com/api)
