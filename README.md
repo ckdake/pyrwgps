@@ -2,6 +2,9 @@
 
 A simple Python client for the [RideWithGPS API](https://ridewithgps.com/api).
 
+Note: this is super under development and in no way should be used without reading
+all of the code first. I'll remove this notice once I'm actually using this package!
+
 ## Features
 
 - Authenticate with the [RideWithGPS API](https://ridewithgps.com/api)
@@ -10,17 +13,29 @@ A simple Python client for the [RideWithGPS API](https://ridewithgps.com/api).
 
 ## Installation
 
+The package is published on [PyPI](https://pypi.org/project/ridewithgps/).
+
+Install the latest release with:
+
 ```sh
 pip install ridewithgps
 ```
 
-Or, for local development:
+For development, install the dev dependencies:
+
+```sh
+pip install -r requirements-dev.txt
+```
+
+Or, for local development with editable install:
 
 ```sh
 git clone https://github.com/ckdake/ridewithgps.git
 cd ridewithgps
-pip install -r requirements.txt
+pip install -e . -r requirements-dev.txt
 ```
+
+---
 
 ## Usage
 
@@ -86,7 +101,7 @@ Run these tools locally to check and format your code:
 
 1. **Install dependencies:**
    ```sh
-   pip install -r requirements.txt
+   pip install -r requirements-dev.txt
    ```
 
 2. **Run tests:**
@@ -141,11 +156,11 @@ If you need to update the VCR cassettes for integration tests:
 To publish a new version of this package to [PyPI](https://pypi.org/):
 
 1. **Update the version number**  
-   Edit `setup.py` (or `pyproject.toml` if using PEP 517/518) and increment the version.
+   Edit `pyproject.toml` and increment the version.
 
 2. **Install build tools**  
    ```sh
-   pip install build twine
+   pip install -r requirements-dev.txt
    ```
 
 3. **Build the distribution**  
@@ -176,7 +191,8 @@ To publish a new version of this package to [PyPI](https://pypi.org/):
 
 ---
 
-For more details on the API, see the [RideWithGPS API documentation](https://ridewithgps.com/api).
+- [PyPI: ridewithgps](https://pypi.org/project/ridewithgps/)
+- [RideWithGPS API documentation](https://ridewithgps.com/api)
 
 ## License
 

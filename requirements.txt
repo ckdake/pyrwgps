@@ -1,12 +1,4 @@
+# Only runtime dependencies needed by ridewithgps itself should go here.
+# (If there are no runtime dependencies, this file can be empty or omitted.)
 certifi==2025.4.26
 urllib3==1.26.18
-
-pylint==3.1.0
-black==24.4.2
-mypy==1.10.0
-flake8==7.0.0
-
-pytest==8.2.2
-pytest-cov==5.0.0
-vcrpy==5.1.0
-pyyaml==6.0.1
