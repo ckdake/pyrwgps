@@ -3,7 +3,8 @@ import pytest
 import vcr  # type: ignore
 import re
 from ridewithgps import RideWithGPS
-
+import logging
+import http.client as http_client
 
 def scrub_sensitive_data(request):
     import urllib.parse
@@ -56,14 +57,14 @@ def test_fetch_20_rides():
     password = os.environ.get("RIDEWITHGPS_PASSWORD")
     apikey = os.environ.get("RIDEWITHGPS_KEY")
 
-    client = RideWithGPS(api_key=apikey)
-    auth = client.call("/users/current.json", {"email": username, "password": password})
-    userid = auth["user"]["id"]
-    auth_token = auth["user"]["auth_token"]
+    client = RideWithGPS(apikey=apikey)
+    user_info = client.authenticate(email=username, password=password)
+    assert user_info is not None, "Authentication failed: check credentials and cassette"
+    userid = user_info.id
 
-    rides = client.call(
-        f"/users/{userid}/trips.json",
-        {"offset": 0, "limit": 20, "auth_token": auth_token},
+    rides = client.get(
+        path=f"/users/{userid}/trips.json",
+        params={"offset": 0, "limit": 20},
     )
 
     # Unfold YAML-folded JSON if needed
@@ -73,7 +74,11 @@ def test_fetch_20_rides():
         rides = unfold_yaml_json_string(rides)
         rides = json.loads(rides)
 
-    assert isinstance(rides, dict)
-    assert "results" in rides
-    assert isinstance(rides["results"], list)
-    assert len(rides["results"]) <= 20
+    # rides should be an object with a 'results' attribute (or dict with 'results' key)
+    results = getattr(rides, "results", None)
+    if results is None and isinstance(rides, dict):
+        results = rides.get("results")
+
+    assert results is not None
+    assert isinstance(results, list)
+    assert len(results) <= 20

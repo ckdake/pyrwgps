@@ -3,23 +3,30 @@
 import json
 from urllib.parse import urlencode
 
+from types import SimpleNamespace
+from typing import Any, Dict, Optional
+
 import urllib3
 import certifi
 from .ratelimiter import RateLimiter
 
+class APIError(Exception):
+    """Base exception for API client errors."""
 
 class APIClient:
     """Base HTTP client for RideWithGPS API."""
 
-    BASE_URL = "http://localhost:5000/"
+    # pylint: disable=too-few-public-methods
+
+    BASE_URL = "http://localhost:5000"
 
     def __init__(
         self,
+        *args,
         rate_limit_lock=None,
         encoding="utf8",
         rate_limit_max=10,
         rate_limit_seconds=1,
-        *args,
         **kwargs,
     ):
         """
@@ -31,6 +38,7 @@ class APIClient:
             rate_limit_max: Max requests per window.
             rate_limit_seconds: Window size in seconds.
         """
+        # pylint: disable=unused-argument
         self.rate_limit_lock = rate_limit_lock
         self.encoding = encoding
         self.connection_pool = self._make_connection_pool()
@@ -44,7 +52,10 @@ class APIClient:
 
     def _compose_url(self, path, params=None):
         """Compose a full URL from path and query parameters."""
-        return self.BASE_URL + path + "?" + urlencode(params)
+        if params:
+            return self.BASE_URL + path + "?" + urlencode(params)
+        else:
+            return self.BASE_URL + path
 
     def _handle_response(self, response):
         """Decode and parse the HTTP response as JSON."""
@@ -57,8 +68,16 @@ class APIClient:
             self.rate_limit_lock.acquire()
         r = self.connection_pool.urlopen(method.upper(), url)
         return self._handle_response(r)
+    
+    def _to_obj(self, data: Any) -> Any:
+        if isinstance(data, dict):
+            return SimpleNamespace(**{k: self._to_obj(v) for k, v in data.items()})
+        if isinstance(data, list):
+            return [self._to_obj(i) for i in data]
+        return data
 
-    def call(self, path, params=None, method="GET", *args, **kwargs):
+
+    def call(self, *args, path, params=None, method="GET", **kwargs):
         """
         Make a rate-limited API call.
 
@@ -67,22 +86,39 @@ class APIClient:
             params: Query parameters.
             method: HTTP method.
         """
+        # pylint: disable=unused-argument
         self.ratelimiter.acquire()
-        return self._request(method, path, params=params)
+        response = self._request(method, path, params=params)
+        if isinstance(response, str):
+            try:
+                data = json.loads(response)
+                if isinstance(data, dict) and ("error" in data or "errors" in data):
+                    message = (
+                        data.get("error") or data.get("errors") or "Unknown API error"
+                    )
+                    raise APIError(str(message))
+                return self._to_obj(data)
+            except json.JSONDecodeError as exc:
+                raise APIError(
+                    "Invalid JSON response"
+                ) from exc
+        return self._to_obj(response)
 
 
 class APIClientSharedSecret(APIClient):
     """API client that uses a shared secret key."""
 
-    API_KEY_PARAM = "key"
+    # pylint: disable=too-few-public-methods
 
-    def __init__(self, api_key, *args, **kwargs):
+    API_KEY_PARAM = "apikey"
+
+    def __init__(self, apikey, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.api_key = api_key
+        self.apikey = apikey
 
     def _compose_url(self, path, params=None):
         """Compose a URL including the shared secret key."""
-        p = {self.API_KEY_PARAM: self.api_key}
+        p = {self.API_KEY_PARAM: self.apikey}
         if params:
             p.update(params)
         return self.BASE_URL + path + "?" + urlencode(p)

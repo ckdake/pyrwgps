@@ -45,14 +45,9 @@ Then, in your Python code:
 ```python
 from ridewithgps import RideWithGPS
 
-client = RideWithGPS(api_key="yourapikey")
-
-# Authenticate client and return user_info as an object
-try:
-    user_info = client.authenticate(email="your@email.com", password="yourpassword")
-except RideWithGPSAPIError as e:
-    print("API error:", e)
-    # Optionally inspect e.response for more details
+# Initialize client and authenticate
+client = RideWithGPS(apikey="yourapikey")
+user_info = client.authenticate(email="your@email.com", password="yourpassword")
 
 print(user_info.id, user_info.display_name)
 
@@ -60,8 +55,8 @@ print(user_info.id, user_info.display_name)
 activity_id = "123456"
 new_name = "Morning Ride"
 response = client.put(
-    f"/trips/{activity_id}.json",
-    {"name": new_name}
+    path=f"/trips/{activity_id}.json",
+    params={"name": new_name}
 )
 updated_name = response.trip.name if hasattr(response, "trip") else None
 if updated_name == new_name:
@@ -70,19 +65,19 @@ else:
     print("Failed to update activity name.")
 
 # Get a list of 20 rides for this user (returned as objects)
-rides = client.get(f"/users/{user_info.id}/trips.json", {
-    "offset": 0,
-    "limit": 20
-})
+rides = client.get(
+    path=f"/users/{user_info.id}/trips.json", 
+    params = {"offset": 0, "limit": 20}
+)
 for ride in rides.results:
     print(ride.name, ride.id)
 
 # Get the gear, and update an activity
 gear = {}
-gear_results = client.get(f"/users/{user_info.id}/gear.json", {
-    "offset": 0,
-    "limit": 100
-}).results
+gear_results = client.get(
+    path=f"/users/{user_info.id}/gear.json", 
+    params={"offset": 0,"limit": 100}
+).results
 for g in gear_results:
     gear[g.id] = g.nickname
 print(gear)
@@ -90,8 +85,8 @@ print(gear)
 gear_id = "example"
 activity_id = "123456"
 response = client.put(
-    f"/trips/{activity_id}.json",
-    {"gear_id": gear_id}
+    path=f"/trips/{activity_id}.json",
+    params={"gear_id": gear_id}
 )
 if hasattr(response, "trip") and getattr(response.trip, "gear_id", None) == gear_id:
     print("Gear updated successfully!")

@@ -12,6 +12,8 @@ class RateExceededError(Exception):
 class RateLimiter:
     """A simple thread-safe rate limiter."""
 
+    # pylint: disable=too-few-public-methods
+
     def __init__(self, max_messages: int = 10, every_seconds: int = 1):
         """
         Initialize the rate limiter.
@@ -62,6 +64,7 @@ class RateLimiter:
                 try:
                     time.sleep(wait_time)
                 finally:
+                    # pylint: disable=consider-using-with
                     self.lock.acquire()
                 self._reset_window()
 
