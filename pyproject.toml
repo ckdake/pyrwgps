@@ -22,7 +22,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = [
   "certifi==2025.4.26",
-  "urllib3==1.26.19",
+  "urllib3==2.4.0",
   "build==1.2.2.post1",
   "twine==6.1.0",
   "pylint==3.3.7",
