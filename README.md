@@ -23,8 +23,9 @@ things work is to use the dev tools in your browser to watch actual requests.
 ## Features
 
 - Authenticates with the [RideWithGPS API](https://ridewithgps.com/api)
-- Makes any API request, get or put, to the API.
-- Built-in rate limiting
+- Makes any API request, `get` or `put`, to the API.
+- Built-in rate limiting, caching, and pagination.
+- Use higher level abstrations like `list` to get collections of things.
 
 ## Installation
 
@@ -96,7 +97,7 @@ print(gear)
 **Note:**  
 - All API responses are automatically converted from JSON to Python objects with attribute access.
 - You must provide your own RideWithGPS credentials and API key.
-- The `get`, `put`, `post`, and `delete` methods are the recommended interface for making API requests; see the code and [RideWithGPS API docs](https://ridewithgps.com/api) for available endpoints and parameters.
+- The `list`, `get`, `put`, `post`, and `delete` methods are the recommended interface for making API requests; see the code and [RideWithGPS API docs](https://ridewithgps.com/api) for available endpoints and parameters.
 
 ---
 
