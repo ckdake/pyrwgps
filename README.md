@@ -198,7 +198,7 @@ If you need to update the VCR cassettes for integration tests:
 To publish a new version of this package to [PyPI](https://pypi.org/):
 
 1. **Update the version number**  
-   Edit `pyproject.toml` and `setup.py` and increment the version.
+   Edit `pyproject.toml` and increment the version.
 
 2. **Install build tools**  
    ```sh
