@@ -10,8 +10,15 @@ class RideWithGPS(APIClientSharedSecret):
 
     BASE_URL = "https://ridewithgps.com/"
 
-    def __init__(self, *args: object, apikey: str, version: int = 2, **kwargs: object):
-        super().__init__(apikey, *args, **kwargs)
+    def __init__(
+        self,
+        *args: object,
+        apikey: str,
+        version: int = 2,
+        cache: bool = False,
+        **kwargs: object,
+    ):
+        super().__init__(apikey, *args, cache=cache, **kwargs)
         self.apikey: str = apikey
         self.version: int = version
         self.user_info: Optional[SimpleNamespace] = None

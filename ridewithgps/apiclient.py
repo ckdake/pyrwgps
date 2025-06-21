@@ -18,13 +18,12 @@ class APIError(Exception):
 class APIClient:
     """Base HTTP client for RideWithGPS API."""
 
-    # pylint: disable=too-few-public-methods
-
     BASE_URL = "http://localhost:5000"
 
     def __init__(
         self,
         *args,
+        cache: bool = False,
         rate_limit_lock=None,
         encoding="utf8",
         rate_limit_max=10,
@@ -35,12 +34,15 @@ class APIClient:
         Initialize the API client.
 
         Args:
+            cache: Enable in-memory caching for GET requests.
             rate_limit_lock: Optional lock for rate limiting.
             encoding: Response encoding.
             rate_limit_max: Max requests per window.
             rate_limit_seconds: Window size in seconds.
         """
-        # pylint: disable=unused-argument
+        # pylint: disable=unused-argument, too-many-arguments
+        self.cache_enabled = cache
+        self._cache = {} if cache else None
         self.rate_limit_lock = rate_limit_lock
         self.encoding = encoding
         self.connection_pool = self._make_connection_pool()
@@ -87,6 +89,15 @@ class APIClient:
             method: HTTP method.
         """
         # pylint: disable=unused-argument
+        cache_key = None
+        use_cache = self.cache_enabled and method.upper() == "GET" and isinstance(self._cache, dict)
+        if use_cache:
+            params_tuple = tuple(sorted((params or {}).items()))
+            cache_key = (path, params_tuple)
+            # pylint: disable=unsupported-membership-test, unsubscriptable-object
+            if cache_key in self._cache:
+                return self._cache[cache_key]
+
         self.ratelimiter.acquire()
         response = self._request(method, path, params=params)
         if isinstance(response, str):
@@ -97,10 +108,23 @@ class APIClient:
                         data.get("error") or data.get("errors") or "Unknown API error"
                     )
                     raise APIError(str(message))
-                return self._to_obj(data)
+                result = self._to_obj(data)
             except json.JSONDecodeError as exc:
                 raise APIError("Invalid JSON response") from exc
-        return self._to_obj(response)
+        else:
+            result = self._to_obj(response)
+
+        if use_cache:
+            # pylint: disable=unsupported-assignment-operation
+            self._cache[cache_key] = result
+        return result
+
+    def clear_cache(self) -> None:
+        """
+        Clear the in-memory GET request cache.
+        """
+        if isinstance(self._cache, dict):
+            self._cache.clear()
 
 
 class APIClientSharedSecret(APIClient):

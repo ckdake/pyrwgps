@@ -45,8 +45,8 @@ Then, in your Python code:
 ```python
 from ridewithgps import RideWithGPS
 
-# Initialize client and authenticate
-client = RideWithGPS(apikey="yourapikey")
+# Initialize client and authenticate, with optional in-memory GET cache enabled
+client = RideWithGPS(apikey="yourapikey", cache=True)
 user_info = client.authenticate(email="your@email.com", password="yourpassword")
 
 print(user_info.id, user_info.display_name)
@@ -63,6 +63,9 @@ if updated_name == new_name:
     print(f"Activity name updated to: {updated_name}")
 else:
     print("Failed to update activity name.")
+
+# We changed something, so probably should clear the cache.
+client.clear_cache()
 
 # Simple GET: Get a list of 20 rides for this user (returned as objects)
 rides = client.get(

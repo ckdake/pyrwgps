@@ -12,8 +12,8 @@ def main():
     password = os.environ.get("RIDEWITHGPS_PASSWORD")
     apikey = os.environ.get("RIDEWITHGPS_KEY")
 
-    # Initialize client and authenticate
-    client = RideWithGPS(apikey=apikey)
+    # Initialize client and authenticate with caching enabled
+    client = RideWithGPS(apikey=apikey, cache=True)
     user_info = client.authenticate(email=username, password=password)
 
     print(user_info.id, user_info.display_name)
@@ -36,7 +36,6 @@ def main():
     ):
         gear[g.id] = g.nickname
     print(gear)
-
 
 if __name__ == "__main__":
     main()
