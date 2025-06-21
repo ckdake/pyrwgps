@@ -80,3 +80,44 @@ class RideWithGPS(APIClientSharedSecret):
     ) -> Any:
         """Make a DELETE request to the API and return a Python object."""
         return self.call(*args, path=path, params=params, method="DELETE", **kwargs)
+
+    def list(
+        self,
+        path: str,
+        params: Optional[dict] = None,
+        limit: Optional[int] = None,
+        **kwargs,
+    ):
+        """
+        Yield up to `limit` items from a RideWithGPS list/search endpoint (auto-paginates).
+        If limit is None, yield all available results.
+        """
+        if params is None:
+            params = {}
+        offset = params.get("offset", 0)
+        fetched = 0
+        page_limit = 100  # API max per page, adjust if needed
+
+        while True:
+            this_page_limit = page_limit
+            if limit is not None:
+                remaining = limit - fetched
+                if remaining <= 0:
+                    break
+                this_page_limit = min(page_limit, remaining)
+
+            page_params = params.copy()
+            page_params.update({"offset": offset, "limit": this_page_limit})
+            response = self.get(path=path, params=page_params, **kwargs)
+            items = getattr(response, "results", None)
+            if not items:
+                break
+            for item in items:
+                yield item
+                fetched += 1
+                if limit is not None and fetched >= limit:
+                    return
+            offset += len(items)
+            results_count = getattr(response, "results_count", None)
+            if results_count is not None and offset >= results_count:
+                break

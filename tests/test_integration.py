@@ -52,7 +52,7 @@ my_vcr = vcr.VCR(
 
 
 @pytest.mark.integration
-@my_vcr.use_cassette("ridewithgps_integration.yaml")
+@my_vcr.use_cassette("ridewithgps_fetch_20_rides.yaml")
 def test_fetch_20_rides():
     username = os.environ.get("RIDEWITHGPS_EMAIL")
     password = os.environ.get("RIDEWITHGPS_PASSWORD")
@@ -85,3 +85,28 @@ def test_fetch_20_rides():
     assert results is not None
     assert isinstance(results, list)
     assert len(results) <= 20
+
+@pytest.mark.integration
+@my_vcr.use_cassette("ridewithgps_list_limit_30.yaml")
+def test_list_limit_30():
+    username = os.environ.get("RIDEWITHGPS_EMAIL")
+    password = os.environ.get("RIDEWITHGPS_PASSWORD")
+    apikey = os.environ.get("RIDEWITHGPS_KEY")
+
+    client = RideWithGPS(apikey=apikey)
+    user_info = client.authenticate(email=username, password=password)
+    assert user_info is not None, "Authentication failed: check credentials"
+
+    rides = list(
+        client.list(
+            path=f"/users/{user_info.id}/trips.json",
+            params={},
+            limit=30,
+        )
+    )
+    # Should get at most 30 rides
+    assert len(rides) <= 30
+    # Each ride should have an id and name
+    for ride in rides:
+        assert hasattr(ride, "id")
+        assert hasattr(ride, "name")

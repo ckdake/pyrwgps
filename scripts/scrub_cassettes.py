@@ -4,12 +4,11 @@ import random
 import os
 import json
 import shutil
+import glob
 
-CASSETTE_PATH = os.path.join(
-    os.path.dirname(__file__), "../tests/cassettes/ridewithgps_integration.yaml"
+CASSETTE_DIR = os.path.join(
+    os.path.dirname(__file__), "../tests/cassettes"
 )
-ORIGINAL_PATH = CASSETTE_PATH + ".original"
-
 
 def get_json_body(interaction):
     """Safely extract the JSON string from the YAML cassette interaction."""
@@ -98,13 +97,14 @@ def scrub_uri(uri, id_maps):
     # return uri
 
 
-def main():
+def scrub_cassette_file(cassette_path):
+    original_path = cassette_path + ".original"
     # Copy original cassette to .original if not already present
-    if not os.path.exists(ORIGINAL_PATH):
-        shutil.copyfile(CASSETTE_PATH, ORIGINAL_PATH)
-        print(f"Original cassette backed up to {ORIGINAL_PATH}")
+    if not os.path.exists(original_path):
+        shutil.copyfile(cassette_path, original_path)
+        print(f"Original cassette backed up to {original_path}")
 
-    with open(ORIGINAL_PATH) as f:
+    with open(original_path) as f:
         cassette = yaml.safe_load(f)
 
     id_maps = {"user": {}, "gear": {}, "ride": {}, "group": {}}
@@ -133,10 +133,16 @@ def main():
             interaction["request"]["uri"], id_maps
         )
 
-    with open(CASSETTE_PATH, "w") as f:
+    with open(cassette_path, "w") as f:
         yaml.dump(cassette, f, sort_keys=False, allow_unicode=True)
 
-    print(f"Sanitized cassette written to {CASSETTE_PATH}")
+    print(f"Sanitized cassette written to {cassette_path}")
+
+
+def main():
+    cassette_files = glob.glob(os.path.join(CASSETTE_DIR, "*.yaml"))
+    for cassette_path in cassette_files:
+        scrub_cassette_file(cassette_path)
 
 
 if __name__ == "__main__":

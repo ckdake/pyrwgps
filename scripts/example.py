@@ -18,12 +18,24 @@ def main():
 
     print(user_info.id, user_info.display_name)
 
-    # Get a list of 20 rides for this user (returned as objects)
-    rides = client.get(
-        path=f"/users/{user_info.id}/trips.json", params={"offset": 0, "limit": 20}
-    )
-    for ride in rides.results:
+    # List up to 30 activities (trips) for this user
+    print("First 30 activities:")
+    for ride in client.list(
+        path=f"/users/{user_info.id}/trips.json",
+        params={},
+        limit=30,
+    ):
         print(ride.name, ride.id)
+
+    # List all gear for this user
+    print("All gear:")
+    gear = {}
+    for g in client.list(
+        path=f"/users/{user_info.id}/gear.json",
+        params={},
+    ):
+        gear[g.id] = g.nickname
+    print(gear)
 
 
 if __name__ == "__main__":

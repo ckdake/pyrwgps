@@ -64,7 +64,7 @@ if updated_name == new_name:
 else:
     print("Failed to update activity name.")
 
-# Get a list of 20 rides for this user (returned as objects)
+# Simple GET: Get a list of 20 rides for this user (returned as objects)
 rides = client.get(
     path=f"/users/{user_info.id}/trips.json", 
     params = {"offset": 0, "limit": 20}
@@ -72,26 +72,22 @@ rides = client.get(
 for ride in rides.results:
     print(ride.name, ride.id)
 
-# Get the gear, and update an activity
+# Automatically paginate: List up to 25 activities (trips) for this user
+for ride in client.list(
+    path=f"/users/{user_info.id}/trips.json",
+    params={},
+    limit=25,
+):
+    print(ride.name, ride.id)
+
+# Automatically paginate: List all gear for this user
 gear = {}
-gear_results = client.get(
-    path=f"/users/{user_info.id}/gear.json", 
-    params={"offset": 0,"limit": 100}
-).results
-for g in gear_results:
+for g in client.list(
+    path=f"/users/{user_info.id}/gear.json",
+    params={},
+):
     gear[g.id] = g.nickname
 print(gear)
-
-gear_id = "example"
-activity_id = "123456"
-response = client.put(
-    path=f"/trips/{activity_id}.json",
-    params={"gear_id": gear_id}
-)
-if hasattr(response, "trip") and getattr(response.trip, "gear_id", None) == gear_id:
-    print("Gear updated successfully!")
-else:
-    print("Failed to update gear.")
 ```
 
 **Note:**  
@@ -178,16 +174,16 @@ If you need to update the VCR cassettes for integration tests:
 
 2. **Run the integration test to generate a new cassette:**
    ```sh
-   rm ridewithgps/tests/cassettes/ridewithgps_integration.yaml
+   rm tests/cassettes/ridewithgps_integration.yaml
    python -m pytest --cov=ridewithgps --cov-report=term-missing -v
    ```
 
 3. **Scrub sensitive data from the cassette:**
    ```sh
-   python scripts/scrub_cassette.py
+   python scripts/scrub_cassettes.py
    ```
-   - This will back up your cassette to `ridewithgps_integration.yaml.original` (if not already present).
-   - The sanitized cassette will overwrite `ridewithgps_integration.yaml`.
+   - This will back up your cassettes to `*.yaml.original` (if not already present).
+   - The sanitized cassettes will overwrite `*.yaml`.
 
 4. **Re-run tests to verify:**
    ```sh
