@@ -42,7 +42,7 @@ class APIClient:
         """
         # pylint: disable=unused-argument, too-many-arguments
         self.cache_enabled = cache
-        self._cache = {} if cache else None
+        self._cache: dict | None = {} if cache else None  # type: ignore[assignment]
         self.rate_limit_lock = rate_limit_lock
         self.encoding = encoding
         self.connection_pool = self._make_connection_pool()
@@ -90,7 +90,11 @@ class APIClient:
         """
         # pylint: disable=unused-argument
         cache_key = None
-        use_cache = self.cache_enabled and method.upper() == "GET" and isinstance(self._cache, dict)
+        use_cache = (
+            self.cache_enabled
+            and method.upper() == "GET"
+            and isinstance(self._cache, dict)
+        )
         if use_cache:
             params_tuple = tuple(sorted((params or {}).items()))
             cache_key = (path, params_tuple)
