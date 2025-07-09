@@ -3,8 +3,8 @@ import json
 from types import SimpleNamespace
 from typing import Any, Dict, Optional
 
-from ridewithgps.apiclient import APIError
-from ridewithgps.ridewithgps import RideWithGPS
+from pyrwgps.apiclient import APIError
+from pyrwgps.ridewithgps import RideWithGPS
 
 
 class DummyAPIClient:

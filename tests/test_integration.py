@@ -2,7 +2,7 @@ import os
 import pytest
 import vcr  # type: ignore
 import re
-from ridewithgps import RideWithGPS
+from pyrwgps import RideWithGPS
 import logging
 import http.client as http_client
 

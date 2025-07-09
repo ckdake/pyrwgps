@@ -11,5 +11,5 @@ jobs:
       - name: Installs packages
         run: pip3 install .[dev]
       - name: Runs pylint
-        run: pylint ridewithgps
+        run: pylint pyrwgps
 

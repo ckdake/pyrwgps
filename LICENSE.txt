@@ -1,6 +1,6 @@
 This is the MIT license: http://www.opensource.org/licenses/mit-license.php
 
-Copyright 2020 Chris Kelly
+Copyright 2026 Chris Kelly
 Portions from https://github.com/shazow/apiclient Copyright 2011 Andrey Petrov and contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this

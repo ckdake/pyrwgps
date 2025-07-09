@@ -1,7 +1,7 @@
 import unittest
 from types import SimpleNamespace
 from unittest.mock import patch, MagicMock
-from ridewithgps.apiclient import APIClient, APIClientSharedSecret
+from pyrwgps.apiclient import APIClient, APIClientSharedSecret
 
 
 class TestAPIClient(unittest.TestCase):
@@ -30,7 +30,7 @@ class TestAPIClientSharedSecret(unittest.TestCase):
         mock_response.data = b'{"ok": true}'
         client.connection_pool.urlopen.return_value = mock_response
 
-        with patch("ridewithgps.apiclient.json.loads", return_value={"ok": True}):
+        with patch("pyrwgps.apiclient.json.loads", return_value={"ok": True}):
             result = client.call(path="/endpoint", params={"foo": "bar"})
             print(result)
             self.assertEqual(result, SimpleNamespace(ok=True))

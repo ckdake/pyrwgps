@@ -1,6 +1,6 @@
 import time
 import unittest
-from ridewithgps.ratelimiter import RateLimiter
+from pyrwgps.ratelimiter import RateLimiter
 
 
 class TestRateLimiter(unittest.TestCase):

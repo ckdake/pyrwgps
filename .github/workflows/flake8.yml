@@ -11,4 +11,4 @@ jobs:
       - name: Installs packages
         run: pip3 install .[dev]
       - name: Runs flake8
-        run: flake8 ridewithgps
+        run: flake8 pyrwgps

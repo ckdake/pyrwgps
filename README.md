@@ -1,6 +1,8 @@
-# python-ridewithgps
+# pyrwgps
 
 A simple Python client for the [RideWithGPS API](https://ridewithgps.com/api).
+
+*This project is not affiliated with or endorsed by RideWithGPS.*
 
 Note: This client isn't used for a lot yet, so it may not work quite right. Read
 the code before you use it, and report any bugs you find.
@@ -29,7 +31,7 @@ things work is to use the dev tools in your browser to watch actual requests.
 
 ## Installation
 
-The package is published on [PyPI](https://pypi.org/project/ridewithgps/).
+The package is published on [PyPI](https://pypi.org/project/pyrwgps/).
 
 ---
 
@@ -38,13 +40,13 @@ The package is published on [PyPI](https://pypi.org/project/ridewithgps/).
 First, install the package:
 
 ```sh
-pip install ridewithgps
+pip install pyrwgps
 ```
 
 Then, in your Python code:
 
 ```python
-from ridewithgps import RideWithGPS
+from pyrwgps import RideWithGPS
 
 # Initialize client and authenticate, with optional in-memory GET cache enabled
 client = RideWithGPS(apikey="yourapikey", cache=True)
@@ -116,15 +118,15 @@ pip install .[dev]
 Or, for local development with editable install:
 
 ```sh
-git clone https://github.com/ckdake/ridewithgps.git
-cd ridewithgps
+git clone https://github.com/ckdake/pyrwgps.git
+cd pyrwgps
 pip install -e . .[dev]
 ```
 
 ### Run tests
 
 ```sh
-python -m pytest --cov=ridewithgps --cov-report=term-missing -v
+python -m pytest --cov=pyrwgps --cov-report=term-missing -v
 ```
 
 ### Run an example
@@ -139,25 +141,25 @@ Run these tools locally to check and format your code:
 - **pylint** (static code analysis):
 
     ```sh
-    pylint ridewithgps
+    pylint pyrwgps
     ```
 
 - **flake8** (style and lint checks):
 
     ```sh
-    flake8 ridewithgps
+    flake8 pyrwgps
     ```
 
 - **black** (auto-formatting):
 
     ```sh
-    black ridewithgps
+    black pyrwgps
     ```
 
 - **mypy** (type checking):
 
     ```sh
-    mypy ridewithgps
+    mypy pyrwgps
     ```
 
 ### Updating Integration Cassettes
@@ -179,7 +181,7 @@ If you need to update the VCR cassettes for integration tests:
 2. **Run the integration test to generate a new cassette:**
    ```sh
    rm tests/cassettes/ridewithgps_integration.yaml
-   python -m pytest --cov=ridewithgps --cov-report=term-missing -v
+   python -m pytest --cov=pyrwgps --cov-report=term-missing -v
    ```
 
 3. **Scrub sensitive data from the cassette:**
@@ -191,7 +193,7 @@ If you need to update the VCR cassettes for integration tests:
 
 4. **Re-run tests to verify:**
    ```sh
-   python -m pytest --cov=ridewithgps --cov-report=term-missing -v
+   python -m pytest --cov=pyrwgps --cov-report=term-missing -v
    ```
 
 ### Publishing to PyPI
@@ -210,7 +212,7 @@ To publish a new version of this package to [PyPI](https://pypi.org/):
    ```sh
    python -m build
    ```
-   This will create `dist/ridewithgps-<version>.tar.gz` and `.whl` files.
+   This will create `dist/pyrwgps-<version>.tar.gz` and `.whl` files.
 
 4. **Check the distribution (optional but recommended)**  
    ```sh
@@ -225,7 +227,7 @@ To publish a new version of this package to [PyPI](https://pypi.org/):
 
 6. **Open your package on PyPI (optional)**  
    ```sh
-   $BROWSER https://pypi.org/project/ridewithgps/
+   $BROWSER https://pypi.org/project/pyrwgps/
    ```
 
 **Note:**  
@@ -234,7 +236,7 @@ To publish a new version of this package to [PyPI](https://pypi.org/):
 
 ---
 
-- [PyPI: ridewithgps](https://pypi.org/project/ridewithgps/)
+- [PyPI: pyrwgps](https://pypi.org/project/pyrwgps/)
 - [RideWithGPS API documentation](https://ridewithgps.com/api)
 
 ---

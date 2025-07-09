@@ -11,4 +11,4 @@ jobs:
       - name: Installs packages
         run: pip3 install .[dev]
       - name: Runs black
-        run: black --check ridewithgps
+        run: black --check pyrwgps

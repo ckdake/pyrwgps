@@ -2,7 +2,7 @@
 
 from types import SimpleNamespace
 from typing import Any, Dict, Optional
-from ridewithgps.apiclient import APIClientSharedSecret
+from pyrwgps.apiclient import APIClientSharedSecret
 
 
 class RideWithGPS(APIClientSharedSecret):
