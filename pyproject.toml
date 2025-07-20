@@ -1,6 +1,6 @@
 [project]
 name = "pyrwgps"
-version = "0.0.1"
+version = "0.0.2"
 authors = [
   { name = "Chris Kelly", email = "ckdake@ckdake.com" },
 ]
@@ -43,6 +43,9 @@ PyPI = "https://pypi.org/project/pyrwgps/"
 [build-system]
 requires = ["hatchling >= 1.26"]
 build-backend = "hatchling.build"
+
+[tool.hatch.build]
+packages = ["pyrwgps"]
 
 [tool.mypy]
 # ...other mypy config...
