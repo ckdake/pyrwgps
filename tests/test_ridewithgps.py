@@ -31,6 +31,10 @@ class DummyAPIClient:
             json_result = '{"results": [{"id": 101, "name": "Ride 1"}, {"id": 102, "name": "Ride 2"}]}'
         elif path == "/test_post" and method == "POST":
             json_result = '{"result": "created", "id": 42}'
+        elif path == "/test_patch" and method == "PATCH":
+            json_result = '{"result": "updated", "id": 42, "name": "%s"}' % (
+                params.get("name", "") if params else ""
+            )
         elif path == "/test_delete" and method == "DELETE":
             json_result = '{"result": "deleted", "id": 42}'
         return self._to_obj(json.loads(json_result))
@@ -76,6 +80,14 @@ def test_post_creates_resource(ridewithgps):
     assert hasattr(response, "result")
     assert response.result == "created"
     assert response.id == 42
+
+
+def test_patch_updates_resource(ridewithgps):
+    response = ridewithgps.patch(path="/test_patch", params={"name": "Updated Name"})
+    assert hasattr(response, "result")
+    assert response.result == "updated"
+    assert response.id == 42
+    assert response.name == "Updated Name"
 
 
 def test_delete_removes_resource(ridewithgps):

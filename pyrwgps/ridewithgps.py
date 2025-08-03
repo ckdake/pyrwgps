@@ -78,6 +78,16 @@ class RideWithGPS(APIClientSharedSecret):
         """Make a POST request to the API and return a Python object."""
         return self.call(*args, path=path, params=params, method="POST", **kwargs)
 
+    def patch(
+        self,
+        *args: Any,
+        path: str,
+        params: Optional[Dict[str, Any]] = None,
+        **kwargs: Any,
+    ) -> Any:
+        """Make a PATCH request to the API and return a Python object."""
+        return self.call(*args, path=path, params=params, method="PATCH", **kwargs)
+
     def delete(
         self,
         *args: Any,

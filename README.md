@@ -107,7 +107,7 @@ print(gear)
 **Note:**  
 - All API responses are automatically converted from JSON to Python objects with attribute access.
 - You must provide your own RideWithGPS credentials and API key.
-- The `list`, `get`, `put`, `post`, and `delete` methods are the recommended interface for making API requests; see the code and [RideWithGPS API docs](https://ridewithgps.com/api) for available endpoints and parameters.
+- The `list`, `get`, `put`, `post`, `patch` and `delete` methods are the recommended interface for making API requests; see the code and [RideWithGPS API docs](https://ridewithgps.com/api) for available endpoints and parameters.
 
 ---
 

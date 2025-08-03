@@ -73,8 +73,12 @@ class TestAPIClientCaching(unittest.TestCase):
 
         # Second: fetch with limit=4 (should hit offset=0 and offset=2)
         self.urlopen_calls.clear()
-        result2_page1 = self.client.call(path="/trips.json", params={"offset": 0, "limit": 2})
-        result2_page2 = self.client.call(path="/trips.json", params={"offset": 2, "limit": 2})
+        result2_page1 = self.client.call(
+            path="/trips.json", params={"offset": 0, "limit": 2}
+        )
+        result2_page2 = self.client.call(
+            path="/trips.json", params={"offset": 2, "limit": 2}
+        )
         self.assertEqual([r.id for r in result2_page1.results], [1, 2])
         self.assertEqual([r.id for r in result2_page2.results], [3, 4])
         # Only the second call (offset=2) should trigger a real HTTP call, offset=0 should be cached
@@ -82,7 +86,9 @@ class TestAPIClientCaching(unittest.TestCase):
         self.assertIn("offset=2", self.urlopen_calls[0])
 
         # Results should be the same as expected
-        self.assertEqual([r.id for r in result2_page1.results + result2_page2.results], [1, 2, 3, 4])
+        self.assertEqual(
+            [r.id for r in result2_page1.results + result2_page2.results], [1, 2, 3, 4]
+        )
 
 
 if __name__ == "__main__":

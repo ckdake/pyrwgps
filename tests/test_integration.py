@@ -86,6 +86,7 @@ def test_fetch_20_rides():
     assert isinstance(results, list)
     assert len(results) <= 20
 
+
 @pytest.mark.integration
 @my_vcr.use_cassette("ridewithgps_list_limit_30.yaml")
 def test_list_limit_30():
