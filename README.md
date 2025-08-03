@@ -188,7 +188,7 @@ If you need to update the VCR cassettes for integration tests:
 
 2. **Run the integration test to generate a new cassette:**
    ```sh
-   rm tests/cassettes/ridewithgps_integration.yaml
+   rm tests/cassettes/*.yaml
    python -m pytest --cov=pyrwgps --cov-report=term-missing -v
    ```
 

@@ -56,9 +56,12 @@ class APIClient:
 
     def _compose_url(self, path, params=None):
         """Compose a full URL from path and query parameters."""
+        base_url = self.BASE_URL.rstrip('/')
+        clean_path = path.lstrip('/')
+        url = f"{base_url}/{clean_path}"
         if params:
-            return self.BASE_URL + path + "?" + urlencode(params)
-        return self.BASE_URL + path
+            return url + "?" + urlencode(params)
+        return url
 
     def _handle_response(self, response):
         """Decode and parse the HTTP response as JSON."""
@@ -70,7 +73,9 @@ class APIClient:
 
         if method in ("POST", "PUT", "PATCH"):
             # For POST/PUT/PATCH, send data as JSON in body
-            url = self.BASE_URL + path
+            base_url = self.BASE_URL.rstrip('/')
+            clean_path = path.lstrip('/')
+            url = f"{base_url}/{clean_path}"
             headers = {"Content-Type": "application/json"}
             body = json.dumps(params or {}).encode(self.encoding)
 
@@ -161,7 +166,9 @@ class APIClientSharedSecret(APIClient):
         p = {self.API_KEY_PARAM: self.apikey}
         if params:
             p.update(params)
-        return self.BASE_URL + path + "?" + urlencode(p)
+        base_url = self.BASE_URL.rstrip('/')
+        clean_path = path.lstrip('/')
+        return f"{base_url}/{clean_path}?" + urlencode(p)
 
     def _request(self, method, path, params=None):
         """Make an HTTP request with API key authentication."""
@@ -181,7 +188,10 @@ class APIClientSharedSecret(APIClient):
                     else:
                         body_params[key] = value
 
-            url = self.BASE_URL + path + "?" + urlencode(query_params)
+            # Ensure no double slashes in URL
+            base_url = self.BASE_URL.rstrip('/')
+            clean_path = path.lstrip('/')
+            url = f"{base_url}/{clean_path}?" + urlencode(query_params)
             headers = {"Content-Type": "application/json"}
             body = json.dumps(body_params).encode(self.encoding)
 
