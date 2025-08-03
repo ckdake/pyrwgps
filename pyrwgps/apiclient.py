@@ -67,13 +67,13 @@ class APIClient:
     def _request(self, method, path, params=None):
         """Make an HTTP request and return the parsed response."""
         method = method.upper()
-        
+
         if method in ("POST", "PUT", "PATCH"):
             # For POST/PUT/PATCH, send data as JSON in body
             url = self.BASE_URL + path
             headers = {"Content-Type": "application/json"}
             body = json.dumps(params or {}).encode(self.encoding)
-            
+
             if self.rate_limit_lock:
                 self.rate_limit_lock.acquire()
             r = self.connection_pool.urlopen(method, url, body=body, headers=headers)
@@ -83,7 +83,7 @@ class APIClient:
             if self.rate_limit_lock:
                 self.rate_limit_lock.acquire()
             r = self.connection_pool.urlopen(method, url)
-            
+
         return self._handle_response(r)
 
     def _to_obj(self, data: Any) -> Any:
@@ -166,13 +166,18 @@ class APIClientSharedSecret(APIClient):
     def _request(self, method, path, params=None):
         """Make an HTTP request with API key authentication."""
         method = method.upper()
-        
+
         if method in ("POST", "PUT", "PATCH"):
             # For POST/PUT/PATCH, send data as JSON in body, API key in URL
-            url = self.BASE_URL + path + "?" + urlencode({self.API_KEY_PARAM: self.apikey})
+            url = (
+                self.BASE_URL
+                + path
+                + "?"
+                + urlencode({self.API_KEY_PARAM: self.apikey})
+            )
             headers = {"Content-Type": "application/json"}
             body = json.dumps(params or {}).encode(self.encoding)
-            
+
             if self.rate_limit_lock:
                 self.rate_limit_lock.acquire()
             r = self.connection_pool.urlopen(method, url, body=body, headers=headers)
@@ -182,5 +187,5 @@ class APIClientSharedSecret(APIClient):
             if self.rate_limit_lock:
                 self.rate_limit_lock.acquire()
             r = self.connection_pool.urlopen(method, url)
-            
+
         return self._handle_response(r)
