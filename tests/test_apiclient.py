@@ -1,4 +1,5 @@
 import unittest
+import json
 from types import SimpleNamespace
 from unittest.mock import patch, MagicMock
 from pyrwgps.apiclient import APIClient, APIClientSharedSecret
@@ -89,6 +90,67 @@ class TestAPIClientCaching(unittest.TestCase):
         self.assertEqual(
             [r.id for r in result2_page1.results + result2_page2.results], [1, 2, 3, 4]
         )
+
+
+class TestAPIClientPatchWithJSON(unittest.TestCase):
+    def setUp(self):
+        self.client = APIClientSharedSecret(apikey="test123")
+        # Create a proper mock for the connection pool
+        self.mock_pool = MagicMock()
+        self.client.connection_pool = self.mock_pool
+        
+        self.mock_response = MagicMock()
+        self.mock_response.data = b'{"trip": {"id": 12345, "name": "Union County Hiking"}}'
+        self.mock_pool.urlopen.return_value = self.mock_response
+
+    def test_patch_sends_json_body_with_content_type(self):
+        """Test that PATCH requests send JSON data in body with correct content type."""
+        trip_data = {
+            "trip": {
+                "name": "Union County Hiking",
+                "description": "",
+                "visibility": 2,
+                "gear_id": 254097,
+                "activity_type": "walking:hiking"
+            }
+        }
+        
+        result = self.client.call(
+            path="/trips/12345",
+            params=trip_data,
+            method="PATCH"
+        )
+        
+        # Verify the response
+        self.assertEqual(result.trip.name, "Union County Hiking")
+        
+        # Verify the HTTP call was made correctly
+        self.mock_pool.urlopen.assert_called_once()
+        call_args = self.mock_pool.urlopen.call_args
+        
+        # Check method
+        self.assertEqual(call_args[0][0], "PATCH")
+        
+        # Check URL (should include API key but no trip data)
+        url = call_args[0][1]
+        self.assertIn("/trips/12345", url)
+        self.assertIn("apikey=test123", url)
+        self.assertNotIn("Union%20County", url)  # Trip data should NOT be in URL
+        
+        # Check that JSON body and headers were passed
+        kwargs = call_args[1]
+        self.assertIn("body", kwargs)
+        self.assertIn("headers", kwargs)
+        
+        # Verify Content-Type header
+        headers = kwargs["headers"]
+        self.assertEqual(headers["Content-Type"], "application/json")
+        
+        # Verify JSON body content
+        body_data = json.loads(kwargs["body"].decode("utf-8"))
+        self.assertEqual(body_data["trip"]["name"], "Union County Hiking")
+        self.assertEqual(body_data["trip"]["gear_id"], 254097)
+        self.assertEqual(body_data["trip"]["activity_type"], "walking:hiking")
 
 
 if __name__ == "__main__":
