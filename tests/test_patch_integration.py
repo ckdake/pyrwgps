@@ -6,6 +6,7 @@ correct request structures matching working examples.
 
 import json
 import unittest
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 from pyrwgps.ridewithgps import RideWithGPS
 
@@ -141,6 +142,52 @@ class TestPatchIntegration(unittest.TestCase):
 
         # Verify response handling
         self.assertTrue(hasattr(response, "trip"))
+
+    def test_patch_handles_empty_response_gracefully(self):
+        """Test that PATCH requests handle empty responses (common for successful operations)."""
+
+        # Mock an empty response (realistic for successful PATCH operations)
+        self.mock_response.data = b""
+        self.mock_pool.urlopen.return_value = self.mock_response
+
+        # This should not raise an exception
+        response = self.client.patch(
+            path="/trips/284579245",
+            params={
+                "trip": {
+                    "gear_id": 254097,
+                }
+            },
+        )
+
+        # Should return an empty SimpleNamespace object
+        self.assertIsNotNone(response)
+        self.assertIsInstance(response, SimpleNamespace)
+        # Empty responses should result in an object with no attributes
+        self.assertEqual(len(vars(response)), 0)
+
+    def test_patch_handles_non_json_response_gracefully(self):
+        """Test that PATCH requests handle non-JSON responses gracefully."""
+
+        # Mock a simple text response (some APIs return plain text for successful operations)
+        self.mock_response.data = b"OK"
+        self.mock_pool.urlopen.return_value = self.mock_response
+
+        # This should not raise an exception
+        response = self.client.patch(
+            path="/trips/284579245",
+            params={
+                "trip": {
+                    "name": "Updated Name",
+                }
+            },
+        )
+
+        # Should return a SimpleNamespace object with the response text
+        self.assertIsNotNone(response)
+        self.assertIsInstance(response, SimpleNamespace)
+        self.assertTrue(hasattr(response, "response_text"))
+        self.assertEqual(response.response_text, "OK")
 
 
 if __name__ == "__main__":

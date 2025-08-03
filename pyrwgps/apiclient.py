@@ -56,16 +56,26 @@ class APIClient:
 
     def _compose_url(self, path, params=None):
         """Compose a full URL from path and query parameters."""
-        base_url = self.BASE_URL.rstrip('/')
-        clean_path = path.lstrip('/')
+        base_url = self.BASE_URL.rstrip("/")
+        clean_path = path.lstrip("/")
         url = f"{base_url}/{clean_path}"
         if params:
             return url + "?" + urlencode(params)
         return url
 
     def _handle_response(self, response):
-        """Decode and parse the HTTP response as JSON."""
-        return json.loads(response.data.decode(self.encoding))
+        """Decode and parse the HTTP response as JSON, or return empty object if no content."""
+        response_data = response.data.decode(self.encoding)
+
+        # Handle empty responses (common for successful PATCH/PUT/DELETE operations)
+        if not response_data.strip():
+            return {}
+
+        try:
+            return json.loads(response_data)
+        except json.JSONDecodeError:
+            # If it's not valid JSON, return the raw text in a simple object
+            return {"response_text": response_data}
 
     def _request(self, method, path, params=None):
         """Make an HTTP request and return the parsed response."""
@@ -73,8 +83,8 @@ class APIClient:
 
         if method in ("POST", "PUT", "PATCH"):
             # For POST/PUT/PATCH, send data as JSON in body
-            base_url = self.BASE_URL.rstrip('/')
-            clean_path = path.lstrip('/')
+            base_url = self.BASE_URL.rstrip("/")
+            clean_path = path.lstrip("/")
             url = f"{base_url}/{clean_path}"
             headers = {"Content-Type": "application/json"}
             body = json.dumps(params or {}).encode(self.encoding)
@@ -166,8 +176,8 @@ class APIClientSharedSecret(APIClient):
         p = {self.API_KEY_PARAM: self.apikey}
         if params:
             p.update(params)
-        base_url = self.BASE_URL.rstrip('/')
-        clean_path = path.lstrip('/')
+        base_url = self.BASE_URL.rstrip("/")
+        clean_path = path.lstrip("/")
         return f"{base_url}/{clean_path}?" + urlencode(p)
 
     def _request(self, method, path, params=None):
@@ -189,8 +199,8 @@ class APIClientSharedSecret(APIClient):
                         body_params[key] = value
 
             # Ensure no double slashes in URL
-            base_url = self.BASE_URL.rstrip('/')
-            clean_path = path.lstrip('/')
+            base_url = self.BASE_URL.rstrip("/")
+            clean_path = path.lstrip("/")
             url = f"{base_url}/{clean_path}?" + urlencode(query_params)
             headers = {"Content-Type": "application/json"}
             body = json.dumps(body_params).encode(self.encoding)
