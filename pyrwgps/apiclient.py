@@ -18,7 +18,7 @@ class APIError(Exception):
 class APIClient:
     """Base HTTP client for RideWithGPS API."""
 
-    BASE_URL = "http://localhost:5000"
+    BASE_URL = "https://ridewithgps.com"
 
     def __init__(
         self,
@@ -169,14 +169,21 @@ class APIClientSharedSecret(APIClient):
 
         if method in ("POST", "PUT", "PATCH"):
             # For POST/PUT/PATCH, send data as JSON in body, API key in URL
-            url = (
-                self.BASE_URL
-                + path
-                + "?"
-                + urlencode({self.API_KEY_PARAM: self.apikey})
-            )
+            # But some parameters (like version, auth_token) should go in URL query string
+            query_params = {self.API_KEY_PARAM: self.apikey}
+            body_params = {}
+
+            if params:
+                for key, value in params.items():
+                    # These parameters should go in URL query string, not JSON body
+                    if key in ("version", "auth_token"):
+                        query_params[key] = value
+                    else:
+                        body_params[key] = value
+
+            url = self.BASE_URL + path + "?" + urlencode(query_params)
             headers = {"Content-Type": "application/json"}
-            body = json.dumps(params or {}).encode(self.encoding)
+            body = json.dumps(body_params).encode(self.encoding)
 
             if self.rate_limit_lock:
                 self.rate_limit_lock.acquire()

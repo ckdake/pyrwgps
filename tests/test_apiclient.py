@@ -19,7 +19,7 @@ class TestAPIClient(unittest.TestCase):
         result = self.client.call(path="/test/path", params={"foo": "bar"})
         self.assertEqual(result, SimpleNamespace(result="success"))
         self.client.connection_pool.urlopen.assert_called_once_with(
-            "GET", "http://localhost:5000/test/path?foo=bar"
+            "GET", "https://ridewithgps.com/test/path?foo=bar"
         )
 
 
@@ -35,7 +35,7 @@ class TestAPIClientSharedSecret(unittest.TestCase):
             result = client.call(path="/endpoint", params={"foo": "bar"})
             print(result)
             self.assertEqual(result, SimpleNamespace(ok=True))
-            expected_url = "http://localhost:5000/endpoint?apikey=abc123&foo=bar"
+            expected_url = "https://ridewithgps.com/endpoint?apikey=abc123&foo=bar"
             client.connection_pool.urlopen.assert_called_once_with("GET", expected_url)
 
 
@@ -149,6 +149,47 @@ class TestAPIClientPatchWithJSON(unittest.TestCase):
         self.assertEqual(body_data["trip"]["name"], "Union County Hiking")
         self.assertEqual(body_data["trip"]["gear_id"], 254097)
         self.assertEqual(body_data["trip"]["activity_type"], "walking:hiking")
+
+    def test_patch_gear_id_real_world_example(self):
+        """Test PATCH request for setting gear_id like the real world example."""
+        gear_data = {
+            "trip": {
+                "gear_id": 254097,
+            }
+        }
+
+        result = self.client.call(
+            path="/trips/284579245", params=gear_data, method="PATCH"
+        )
+
+        # Verify the response
+        self.assertEqual(result.trip.name, "Union County Hiking")
+
+        # Verify the HTTP call was made correctly
+        self.mock_pool.urlopen.assert_called_once()
+        call_args = self.mock_pool.urlopen.call_args
+
+        # Check method
+        self.assertEqual(call_args[0][0], "PATCH")
+
+        # Check URL matches the real-world pattern
+        url = call_args[0][1]
+        self.assertIn("/trips/284579245", url)
+        self.assertIn("apikey=test123", url)
+
+        # Check that JSON body and headers were passed
+        kwargs = call_args[1]
+        self.assertIn("body", kwargs)
+        self.assertIn("headers", kwargs)
+
+        # Verify Content-Type header
+        headers = kwargs["headers"]
+        self.assertEqual(headers["Content-Type"], "application/json")
+
+        # Verify JSON body content matches the exact structure
+        body_data = json.loads(kwargs["body"].decode("utf-8"))
+        self.assertEqual(body_data["trip"]["gear_id"], 254097)
+        self.assertEqual(len(body_data["trip"]), 1)  # Only gear_id should be present
 
 
 if __name__ == "__main__":

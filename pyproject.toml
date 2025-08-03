@@ -1,6 +1,6 @@
 [project]
 name = "pyrwgps"
-version = "0.0.4"
+version = "0.0.5"
 authors = [
   { name = "Chris Kelly", email = "ckdake@ckdake.com" },
 ]
