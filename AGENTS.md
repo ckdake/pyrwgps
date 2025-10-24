@@ -1,0 +1,23 @@
+# pyrwgps Agent Guide
+- **Project Scope:** Lightweight Python client for the RideWithGPS REST API. Core package lives in `pyrwgps/`; tests and VCR fixtures live under `tests/`.
+- **Dev Container:** `.devcontainer/devcontainer.json` starts from the Python 3.11 bullseye image and runs `pip3 install -e '.[dev]'` on create; add setup steps there so contributors can rebuild a fresh environment without manual pip work. Work inside the container and skip `python -m venv`; the base image already has the needed interpreter.
+- **Primary Abstraction:** `pyrwgps.ridewithgps.RideWithGPS` extends `APIClientSharedSecret` to wrap HTTPS calls, auto-adding `apikey`, versioning, auth tokens, caching, and pagination helpers.
+- **HTTP Pipeline:** `APIClient.call` handles rate limiting (`pyrwgps/ratelimiter.py`), urllib3 requests, JSON decoding, and converts dicts/lists into `types.SimpleNamespace` trees so callers expect attribute access (keep this behaviour when adding endpoints).
+- **Auth + Params:** PATCH/POST/PUT must place `version` and `auth_token` query params in the URL while JSON payloads stay in the body (`APIClientSharedSecret._request`). Tests in `tests/test_patch_integration.py` guard this contract; update them if the split changes.
+- **Transport Stack:** Outbound HTTP uses `urllib3.PoolManager` seeded with `certifi` certificates; replicate that pattern if you add custom pools or adapters.
+- **Pagination Pattern:** Use `RideWithGPS.list` to iterate collection endpoints. It respects `limit`, increments `offset`, and stops when `results_count` or `limit` is met. Keep API responses compatible with this generator.
+- **Caching:** Instantiating clients with `cache=True` enables an in-memory GET cache keyed by `(path, sorted params)`. When modifying GET behaviour, consider cache invalidation via `RideWithGPS.clear_cache()`.
+- **Rate Limits:** `RateLimiter.acquire()` is called inside `APIClient.call`. Avoid bypassing `call()` if you need throttling. For concurrent changes, ensure shared lock objects are honoured.
+- **Thread Safety:** `RateLimiter` uses `threading.Lock`; if you extend it, preserve the lock lifecycle to avoid deadlocks (see `tests/test_ratelimiter.py`).
+- **Testing Workflow:** Quick feedback: `python -m pytest -m "not integration"`. Full run (requires credentials + network cassettes): `python -m pytest --cov=pyrwgps --cov-report=term-missing -v`.
+- **Integration Fixtures:** VCR cassettes live in `tests/cassettes/`. To refresh them, set `RIDEWITHGPS_EMAIL`, `RIDEWITHGPS_PASSWORD`, `RIDEWITHGPS_KEY`, run the integration tests, then scrub with `python scripts/scrub_cassettes.py` to anonymize secrets.
+- **Marker Usage:** `pytest.ini` declares the `integration` marker; sync new long-running tests with that marker so CI can toggle network usage.
+- **CI Mirror:** `.github/workflows/*.yml` run black, flake8, mypy, pylint, and pytest with `pip3 install .[dev]`; keep local commands and dependency pins aligned so CI matches devcontainer results.
+- **Make Targets:** `Makefile` exposes `make lint` (black, flake8, pylint, mypy) and `make test` (pytest with coverage). Use these before pushing; extend them instead of hand-maintaining shell scripts.
+- **Linting Standards:** Project relies on `black`, `flake8`, `mypy`, `pylint`; prefer running the exact commands from README when touching interfaces or type hints.
+- **Example Usage:** `scripts/example.py` demonstrates typical authenticate/get/list/clear_cache flow—mirror its structure for docs or new samples.
+- **Error Handling:** `APIClient.call` raises `APIError` when the API returns `error`/`errors` fields or invalid JSON; surface new failure modes through this exception hierarchy rather than raw errors.
+- **Type Hints:** Package is typed (`pyrwgps/py.typed`). Maintain annotations, especially on public client methods, to keep downstream users happy.
+- **Testing Doubles:** Unit tests usually stub `connection_pool.urlopen` with `MagicMock` to avoid HTTP calls (`tests/test_apiclient.py`). Follow that strategy when adding behaviours that need HTTP verification.
+- **Releases:** Bump version in `pyproject.toml`, build with `python -m build`, upload via `twine upload dist/*`. Ensure cassette scrubbing and tests pass before publishing.
+- **When Unsure:** Check `README.md` for command references and `tests/` for expected behaviours; add regression tests alongside functionality touching HTTP semantics.
