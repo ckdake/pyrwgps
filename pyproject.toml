@@ -27,7 +27,7 @@ dev = [
   "twine==6.2.0",
   "pylint==3.3.9",
   "black==25.11.0",
-  "mypy==1.18.2",
+  "mypy==1.19.0",
   "flake8==7.3.0",
   "pytest-cov==7.0.0",
   "pytest==8.4.2",
