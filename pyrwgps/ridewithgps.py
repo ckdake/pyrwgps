@@ -122,7 +122,9 @@ class RideWithGPS(APIClientSharedSecret):
         fetched = 0
 
         while True:
-            this_page_size = page_size if limit is None else min(page_size, limit - fetched)
+            this_page_size = (
+                page_size if limit is None else min(page_size, limit - fetched)
+            )
             if limit is not None and this_page_size <= 0:
                 break
             page_params = {**params, "page": page, "page_size": this_page_size}
@@ -147,7 +149,9 @@ class RideWithGPS(APIClientSharedSecret):
         fetched = 0
 
         while True:
-            this_limit = page_limit if limit is None else min(page_limit, limit - fetched)
+            this_limit = (
+                page_limit if limit is None else min(page_limit, limit - fetched)
+            )
             if limit is not None and this_limit <= 0:
                 break
             page_params = {**params, "offset": offset, "limit": this_limit}
