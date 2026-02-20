@@ -115,6 +115,56 @@ class RideWithGPS(APIClientSharedSecret):
         """Make a DELETE request to the API and return a Python object."""
         return self.call(*args, path=path, params=params, method="DELETE", **kwargs)
 
+    def _list_v1(self, path, params, limit, result_key, **kwargs):
+        """Yield items from a v1 API endpoint using page/page_size pagination."""
+        page_size = params.get("page_size", 100)
+        page = params.get("page", 1)
+        fetched = 0
+
+        while True:
+            this_page_size = page_size if limit is None else min(page_size, limit - fetched)
+            if limit is not None and this_page_size <= 0:
+                break
+            page_params = {**params, "page": page, "page_size": this_page_size}
+            response = self.get(path=path, params=page_params, **kwargs)
+            items = getattr(response, result_key, None)
+            if not items:
+                break
+            for item in items:
+                yield item
+                fetched += 1
+                if limit is not None and fetched >= limit:
+                    return
+            pagination = getattr(getattr(response, "meta", None), "pagination", None)
+            if not getattr(pagination, "next_page_url", None):
+                break
+            page += 1
+
+    def _list_legacy(self, path, params, limit, result_key, **kwargs):
+        """Yield items from a legacy API endpoint using offset/limit pagination."""
+        offset = params.get("offset", 0)
+        page_limit = 100
+        fetched = 0
+
+        while True:
+            this_limit = page_limit if limit is None else min(page_limit, limit - fetched)
+            if limit is not None and this_limit <= 0:
+                break
+            page_params = {**params, "offset": offset, "limit": this_limit}
+            response = self.get(path=path, params=page_params, **kwargs)
+            items = getattr(response, result_key, None)
+            if not items:
+                break
+            for item in items:
+                yield item
+                fetched += 1
+                if limit is not None and fetched >= limit:
+                    return
+            offset += len(items)
+            results_count = getattr(response, "results_count", None)
+            if results_count is not None and offset >= results_count:
+                break
+
     def list(
         self,
         path: str,
@@ -133,66 +183,5 @@ class RideWithGPS(APIClientSharedSecret):
         """
         if params is None:
             params = {}
-        fetched = 0
-
-        # v1 API: page/page_size pagination
-        if "/api/v1/" in path:
-            page_size = params.get("page_size", 100)
-            page = params.get("page", 1)
-
-            while True:
-                this_page_size = page_size
-                if limit is not None:
-                    remaining = limit - fetched
-                    if remaining <= 0:
-                        break
-                    this_page_size = min(page_size, remaining)
-
-                page_params = params.copy()
-                page_params.update({"page": page, "page_size": this_page_size})
-                response = self.get(path=path, params=page_params, **kwargs)
-                items = getattr(response, result_key, None)
-                if not items:
-                    break
-                for item in items:
-                    yield item
-                    fetched += 1
-                    if limit is not None and fetched >= limit:
-                        return
-                meta = getattr(response, "meta", None)
-                pagination = getattr(meta, "pagination", None) if meta else None
-                next_page_url = (
-                    getattr(pagination, "next_page_url", None) if pagination else None
-                )
-                if not next_page_url:
-                    break
-                page += 1
-
-        # Legacy API: offset/limit/results_count pagination
-        else:
-            offset = params.get("offset", 0)
-            page_limit = 100
-
-            while True:
-                this_page_limit = page_limit
-                if limit is not None:
-                    remaining = limit - fetched
-                    if remaining <= 0:
-                        break
-                    this_page_limit = min(page_limit, remaining)
-
-                page_params = params.copy()
-                page_params.update({"offset": offset, "limit": this_page_limit})
-                response = self.get(path=path, params=page_params, **kwargs)
-                items = getattr(response, result_key, None)
-                if not items:
-                    break
-                for item in items:
-                    yield item
-                    fetched += 1
-                    if limit is not None and fetched >= limit:
-                        return
-                offset += len(items)
-                results_count = getattr(response, "results_count", None)
-                if results_count is not None and offset >= results_count:
-                    break
+        paginator = self._list_v1 if "/api/v1/" in path else self._list_legacy
+        yield from paginator(path, params, limit, result_key, **kwargs)
