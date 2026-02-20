@@ -77,7 +77,7 @@ class APIClient:
             # If it's not valid JSON, return the raw text in a simple object
             return {"response_text": response_data}
 
-    def _request(self, method, path, params=None):
+    def _request(self, method, path, params=None, extra_headers=None):
         """Make an HTTP request and return the parsed response."""
         method = method.upper()
 
@@ -87,6 +87,8 @@ class APIClient:
             clean_path = path.lstrip("/")
             url = f"{base_url}/{clean_path}"
             headers = {"Content-Type": "application/json"}
+            if extra_headers:
+                headers.update(extra_headers)
             body = json.dumps(params or {}).encode(self.encoding)
 
             if self.rate_limit_lock:
@@ -95,9 +97,10 @@ class APIClient:
         else:
             # For GET/DELETE, use query parameters
             url = self._compose_url(path, params)
+            headers = extra_headers or {}
             if self.rate_limit_lock:
                 self.rate_limit_lock.acquire()
-            r = self.connection_pool.urlopen(method, url)
+            r = self.connection_pool.urlopen(method, url, headers=headers)
 
         return self._handle_response(r)
 
@@ -180,7 +183,7 @@ class APIClientSharedSecret(APIClient):
         clean_path = path.lstrip("/")
         return f"{base_url}/{clean_path}?" + urlencode(p)
 
-    def _request(self, method, path, params=None):
+    def _request(self, method, path, params=None, extra_headers=None):
         """Make an HTTP request with API key authentication."""
         method = method.upper()
 
@@ -202,7 +205,14 @@ class APIClientSharedSecret(APIClient):
             base_url = self.BASE_URL.rstrip("/")
             clean_path = path.lstrip("/")
             url = f"{base_url}/{clean_path}?" + urlencode(query_params)
-            headers = {"Content-Type": "application/json"}
+            headers = {
+                "Content-Type": "application/json",
+                "x-rwgps-api-key": self.apikey,
+            }
+            if "auth_token" in query_params:
+                headers["x-rwgps-auth-token"] = query_params["auth_token"]
+            if extra_headers:
+                headers.update(extra_headers)
             body = json.dumps(body_params).encode(self.encoding)
 
             if self.rate_limit_lock:
@@ -211,8 +221,13 @@ class APIClientSharedSecret(APIClient):
         else:
             # For GET/DELETE, use query parameters including API key
             url = self._compose_url(path, params)
+            headers = {"x-rwgps-api-key": self.apikey}
+            if params and "auth_token" in params:
+                headers["x-rwgps-auth-token"] = params["auth_token"]
+            if extra_headers:
+                headers.update(extra_headers)
             if self.rate_limit_lock:
                 self.rate_limit_lock.acquire()
-            r = self.connection_pool.urlopen(method, url)
+            r = self.connection_pool.urlopen(method, url, headers=headers)
 
         return self._handle_response(r)

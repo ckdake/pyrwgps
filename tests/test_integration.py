@@ -1,10 +1,9 @@
 import os
+import json
 import pytest
 import vcr  # type: ignore
 import re
 from pyrwgps import RideWithGPS
-import logging
-import http.client as http_client
 
 
 def scrub_sensitive_data(request):
@@ -19,6 +18,21 @@ def scrub_sensitive_data(request):
     # Rebuild the URL with the scrubbed query
     new_url = url._replace(query=new_query).geturl()
     request.uri = new_url  # Directly set the uri attribute
+
+    # Scrub credentials from the POST body for the v1 auth endpoint
+    body = getattr(request, "body", None) or ""
+    if isinstance(body, bytes):
+        body = body.decode("utf-8", errors="replace")
+    if "auth_tokens" in request.uri and body:
+        try:
+            body_json = json.loads(body)
+            if "user" in body_json:
+                body_json["user"]["email"] = "DUMMY"
+                body_json["user"]["password"] = "DUMMY"
+            request.body = json.dumps(body_json)
+        except (json.JSONDecodeError, TypeError, KeyError):
+            pass
+
     return request
 
 
@@ -45,6 +59,8 @@ my_vcr = vcr.VCR(
         "set-cookie",
         "cookie",
         "x-csrf-token",
+        "x-rwgps-api-key",
+        "x-rwgps-auth-token",
     ],
     before_record_request=scrub_sensitive_data,
     before_record_response=scrub_sensitive_response,
@@ -71,8 +87,6 @@ def test_fetch_20_rides():
     )
 
     # Unfold YAML-folded JSON if needed
-    import json
-
     if isinstance(rides, str):
         rides = unfold_yaml_json_string(rides)
         rides = json.loads(rides)

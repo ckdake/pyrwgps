@@ -19,7 +19,7 @@ class TestAPIClient(unittest.TestCase):
         result = self.client.call(path="/test/path", params={"foo": "bar"})
         self.assertEqual(result, SimpleNamespace(result="success"))
         self.client.connection_pool.urlopen.assert_called_once_with(
-            "GET", "https://ridewithgps.com/test/path?foo=bar"
+            "GET", "https://ridewithgps.com/test/path?foo=bar", headers={}
         )
 
 
@@ -36,7 +36,9 @@ class TestAPIClientSharedSecret(unittest.TestCase):
             print(result)
             self.assertEqual(result, SimpleNamespace(ok=True))
             expected_url = "https://ridewithgps.com/endpoint?apikey=abc123&foo=bar"
-            client.connection_pool.urlopen.assert_called_once_with("GET", expected_url)
+            client.connection_pool.urlopen.assert_called_once_with(
+                "GET", expected_url, headers={"x-rwgps-api-key": "abc123"}
+            )
 
 
 class TestAPIClientCaching(unittest.TestCase):
@@ -52,7 +54,7 @@ class TestAPIClientCaching(unittest.TestCase):
         ]
         self.urlopen_calls = []
 
-        def urlopen_side_effect(method, url):
+        def urlopen_side_effect(method, url, **kwargs):
             self.urlopen_calls.append(url)
             # Return the correct response based on offset in the URL
             if "offset=0" in url:

@@ -1,15 +1,14 @@
 # pyrwgps
 
-A simple Python client for the [RideWithGPS API](https://ridewithgps.com/api).
+A simple Python client for the [RideWithGPS API](https://ridewithgps.com/api/v1/doc).
 
 *This project is not affiliated with or endorsed by RideWithGPS.*
 
-Note: This client isn't used for a lot yet, so it may not work quite right. Read
-the code before you use it, and report any bugs you find.
+> **Note:** This client is not yet feature-complete. Read the code before you use it and report any bugs you find.
+>
+> **API versions:** RideWithGPS has a v1 API (`/api/v1/...`) and a legacy API (no version prefix). This client supports both, but v1 coverage is incomplete. See [API Versions](#api-versions) for a full breakdown of what uses v1 vs legacy.
 
-Also Note: The Ride With GPS API is JSON based and under active development. It
-doesn't have full documentation published, and the best way to figure out how
-things work is to use the dev tools in your browser to watch actual requests.
+> **Authentication:** No OAuth required. `authenticate()` uses the v1 Basic auth endpoint (`POST /api/v1/auth_tokens.json`) with your existing API key. The returned token works for both v1 and legacy endpoints.
 
 [![PyPI version](https://img.shields.io/pypi/v/pyrwgps.svg)](https://pypi.org/project/pyrwgps/)
 [![PyPI downloads](https://img.shields.io/pypi/dm/pyrwgps.svg)](https://pypi.org/project/pyrwgps/)
@@ -24,18 +23,75 @@ things work is to use the dev tools in your browser to watch actual requests.
 
 ## Features
 
-- Authenticates with the [RideWithGPS API](https://ridewithgps.com/api)
-- Makes any API request, `get` or `put`, to the API.
+- Authenticates with the [RideWithGPS API](https://ridewithgps.com/api/v1/doc)
+- Makes any API request — `get`, `put`, `post`, `patch`, `delete` — to v1 or legacy endpoints.
 - Built-in rate limiting, caching, and pagination.
-- Use higher level abstrations like `list` to get collections of things.
+- Use higher-level abstractions like `list` to iterate collections with automatic pagination.
 
-## Coming Soon
+## API Versions
 
-RideWithGPS has a new API under development at [https://github.com/ridewithgps/developers](https://github.com/ridewithgps/developers). 
+RideWithGPS has a v1 API (`/api/v1/...`) and a legacy API (no version prefix). This client supports
+both. The v1 API is preferred where available, but several things are **not yet in v1** and still
+require the legacy API.
 
-Expect this library to expose the new endpoints with "top level" methods, and OAuth.
+### Uses v1 API (`/api/v1/...`)
 
-Also expect this library to support registering for inbound webhooks from RideWithGPS. Exciting.
+| Resource | Operations |
+|---|---|
+| Authentication | Create token (email + password + API key, no OAuth needed) |
+| Trips | List, get single, delete, get polyline |
+| Routes | List, get single, delete, get polyline |
+| Collections | List, get single, get pinned |
+| Events | List, create, get single, update, delete |
+| Club Members | List, get single, update |
+| Points of Interest | List, create, get single, update, delete, associate/disassociate with route |
+| Sync | Get items for sync |
+| Users | Get current user |
+
+For `list` over a v1 endpoint, pass `result_key` matching the response root key (e.g. `result_key="trips"`). See [v1 API usage](#v1-api) for examples.
+
+### Still uses legacy API (no version prefix)
+
+These are **not available on v1** and require the legacy endpoints:
+
+| Resource / Feature | Legacy endpoint | Reason |
+|---|---|---|
+| Gear | `/users/{user_id}/gear.json` | No v1 gear endpoint exists |
+| Create trip | `/trips.json` (POST) | v1 trips is read/delete only |
+| Update trip | `/trips/{id}.json` (PUT/PATCH) | v1 trips is read/delete only |
+| Create route | `/routes.json` (POST) | v1 routes is read/delete only |
+| Update route | `/routes/{id}.json` (PUT/PATCH) | v1 routes is read/delete only |
+
+## v1 API
+
+v1 endpoints live under `/api/v1/` and use `page`/`page_size` pagination, returning results
+under a named root key (e.g. `{"trips": [...], "meta": {...}}`).
+
+All of `list`, `get`, `put`, `post`, `patch`, and `delete` work with v1 paths.
+For `list`, pass `result_key` matching the response root key:
+
+```python
+# List all trips (v1)
+for trip in client.list("/api/v1/trips.json", result_key="trips"):
+    print(trip.name, trip.id)
+
+# List routes, up to 50 (v1)
+for route in client.list("/api/v1/routes.json", result_key="routes", limit=50):
+    print(route.name, route.id)
+
+# Get a single resource (v1)
+route = client.get(path="/api/v1/routes/123456.json")
+print(route.route.name)
+
+# Get the authenticated user's pinned collection (v1)
+pinned = client.get(path="/api/v1/collections/pinned.json")
+
+# Create an event (v1)
+event = client.post(
+    path="/api/v1/events.json",
+    params={"name": "My Gran Fondo", "start_date": "2026-06-01"},
+)
+```
 
 ## Installation
 
@@ -62,7 +118,7 @@ user_info = client.authenticate(email="your@email.com", password="yourpassword")
 
 print(user_info.id, user_info.display_name)
 
-# Update the name of an activity (trip)
+# Update the name of a trip (legacy API — trip update not yet in v1)
 activity_id = "123456"
 new_name = "Morning Ride"
 response = client.put(
@@ -78,23 +134,30 @@ else:
 # We changed something, so probably should clear the cache.
 client.clear_cache()
 
-# Simple GET: Get a list of 20 rides for this user (returned as objects)
-rides = client.get(
-    path=f"/users/{user_info.id}/trips.json", 
-    params = {"offset": 0, "limit": 20}
-)
-for ride in rides.results:
-    print(ride.name, ride.id)
+# Simple GET: fetch a single trip via the v1 API
+trip = client.get(path="/api/v1/trips/123456.json")
+print(trip.trip.name, trip.trip.id)
 
-# Automatically paginate: List up to 25 activities (trips) for this user
-for ride in client.list(
-    path=f"/users/{user_info.id}/trips.json",
-    params={},
+# Automatically paginate: List up to 25 trips via the v1 API
+for trip in client.list(
+    path="/api/v1/trips.json",
+    result_key="trips",
     limit=25,
 ):
-    print(ride.name, ride.id)
+    print(trip.name, trip.id)
 
-# Automatically paginate: List all gear for this user
+# Automatically paginate: List all routes via the v1 API
+for route in client.list(
+    path="/api/v1/routes.json",
+    result_key="routes",
+):
+    print(route.name, route.id)
+
+# Get the authenticated user's pinned collection (v1)
+pinned = client.get(path="/api/v1/collections/pinned.json")
+print(pinned)
+
+# Automatically paginate: List all gear for this user (legacy API — no v1 gear endpoint yet)
 gear = {}
 for g in client.list(
     path=f"/users/{user_info.id}/gear.json",
@@ -107,7 +170,8 @@ print(gear)
 **Note:**  
 - All API responses are automatically converted from JSON to Python objects with attribute access.
 - You must provide your own RideWithGPS credentials and API key.
-- The `list`, `get`, `put`, `post`, `patch` and `delete` methods are the recommended interface for making API requests; see the code and [RideWithGPS API docs](https://ridewithgps.com/api) for available endpoints and parameters.
+- Use v1 endpoints (`/api/v1/...`) for trips, routes, collections, events, club members, points of interest, and sync. See the [v1 API section](#v1-api) for what is and isn't available.
+- The `list`, `get`, `put`, `post`, `patch` and `delete` methods are the recommended interface for making API requests; see the code and [RideWithGPS API docs](https://ridewithgps.com/api/v1/doc) for available endpoints and parameters.
 
 ---
 
@@ -186,9 +250,9 @@ If you need to update the VCR cassettes for integration tests:
    export RIDEWITHGPS_KEY=yourapikey
    ```
 
-2. **Run the integration test to generate a new cassette:**
+2. **Delete all existing cassettes (including backups) and re-record:**
    ```sh
-   rm tests/cassettes/*.yaml
+   rm tests/cassettes/*.yaml tests/cassettes/*.yaml.original
    python -m pytest --cov=pyrwgps --cov-report=term-missing -v
    ```
 
@@ -245,7 +309,7 @@ To publish a new version of this package to [PyPI](https://pypi.org/):
 ---
 
 - [PyPI: pyrwgps](https://pypi.org/project/pyrwgps/)
-- [RideWithGPS API documentation](https://ridewithgps.com/api)
+- [RideWithGPS API documentation](https://ridewithgps.com/api/v1/doc)
 
 ---
 

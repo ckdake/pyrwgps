@@ -6,9 +6,8 @@ import json
 import shutil
 import glob
 
-CASSETTE_DIR = os.path.join(
-    os.path.dirname(__file__), "../tests/cassettes"
-)
+CASSETTE_DIR = os.path.join(os.path.dirname(__file__), "../tests/cassettes")
+
 
 def get_json_body(interaction):
     """Safely extract the JSON string from the YAML cassette interaction."""
@@ -24,7 +23,7 @@ def fake_id(real_id, id_map, prefix):
     if not real_id:
         return real_id
     if real_id not in id_map:
-        id_map[real_id] = int(f"{prefix}{random.randint(100000,999999)}")
+        id_map[real_id] = int(f"{prefix}{random.randint(100000, 999999)}")
     return id_map[real_id]
 
 
@@ -99,21 +98,49 @@ def scrub_uri(uri, id_maps):
 
 def scrub_cassette_file(cassette_path):
     original_path = cassette_path + ".original"
-    # Copy original cassette to .original if not already present
+    # Back up to .original only if it doesn't already exist (first run after recording)
     if not os.path.exists(original_path):
         shutil.copyfile(cassette_path, original_path)
         print(f"Original cassette backed up to {original_path}")
 
-    with open(original_path) as f:
+    # Always scrub from the current .yaml (not .original) so re-recorded
+    # cassettes are scrubbed correctly rather than reverting to old content.
+    with open(cassette_path) as f:
         cassette = yaml.safe_load(f)
 
     id_maps = {"user": {}, "gear": {}, "ride": {}, "group": {}}
 
     for interaction in cassette["interactions"]:
-        if "/users/current.json" in interaction["request"]["uri"]:
+        # Scrub credentials from auth request body (POST /api/v1/auth_tokens.json)
+        req_body = interaction["request"].get("body") or ""
+        if isinstance(req_body, bytes):
+            req_body = req_body.decode("utf-8", errors="replace")
+        if "auth_tokens" in interaction["request"]["uri"] and req_body:
+            try:
+                body_json = json.loads(req_body)
+                if "user" in body_json:
+                    body_json["user"]["email"] = "DUMMY"
+                    body_json["user"]["password"] = "DUMMY"
+                interaction["request"]["body"] = json.dumps(body_json)
+            except (json.JSONDecodeError, TypeError, KeyError):
+                pass
+
+        if "/api/v1/auth_tokens.json" in interaction["request"]["uri"]:
             body = get_json_body(interaction)
             resp = json.loads(body)
-            # Scrub user and remove labs
+            # New v1 auth response: {"auth_token": {"auth_token": "...", "user": {...}}}
+            if "auth_token" in resp and isinstance(resp["auth_token"], dict):
+                auth_obj = resp["auth_token"]
+                auth_obj["auth_token"] = "FAKE_TOKEN"
+                if "user" in auth_obj and isinstance(auth_obj["user"], dict):
+                    auth_obj["user"] = scrub_user(auth_obj["user"], id_maps)
+            interaction["response"]["body"]["string"] = json.dumps(
+                resp, ensure_ascii=False, separators=(",", ":")
+            )
+        elif "/users/current.json" in interaction["request"]["uri"]:
+            body = get_json_body(interaction)
+            resp = json.loads(body)
+            # Legacy auth response: {"user": {..., "auth_token": "..."}}
             resp["user"] = scrub_user(resp["user"], id_maps)
             interaction["response"]["body"]["string"] = json.dumps(
                 resp, ensure_ascii=False, separators=(",", ":")
@@ -140,7 +167,9 @@ def scrub_cassette_file(cassette_path):
 
 
 def main():
-    cassette_files = glob.glob(os.path.join(CASSETTE_DIR, "*.yaml"))
+    # Exclude .yaml.original backup files — only process the active cassettes.
+    all_yaml = glob.glob(os.path.join(CASSETTE_DIR, "*.yaml"))
+    cassette_files = [p for p in all_yaml if not p.endswith(".yaml.original")]
     for cassette_path in cassette_files:
         scrub_cassette_file(cassette_path)
 
