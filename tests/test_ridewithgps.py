@@ -47,7 +47,10 @@ class DummyAPIClient:
             if page == 1:
                 json_result = json.dumps(
                     {
-                        "trips": [{"id": 1, "name": "Trip 1"}, {"id": 2, "name": "Trip 2"}],
+                        "trips": [
+                            {"id": 1, "name": "Trip 1"},
+                            {"id": 2, "name": "Trip 2"},
+                        ],
                         "meta": {
                             "pagination": {
                                 "record_count": 3,
@@ -77,7 +80,10 @@ class DummyAPIClient:
             if offset == 0:
                 json_result = json.dumps(
                     {
-                        "results": [{"id": 101, "name": "Ride 1"}, {"id": 102, "name": "Ride 2"}],
+                        "results": [
+                            {"id": 101, "name": "Ride 1"},
+                            {"id": 102, "name": "Ride 2"},
+                        ],
                         "results_count": 3,
                     }
                 )
@@ -162,7 +168,11 @@ def test_list_v1_respects_limit(ridewithgps):
 
 def test_list_legacy_paginates_all_pages(ridewithgps):
     """list() with a legacy path should follow offset/results_count until exhausted."""
-    rides = list(ridewithgps.list("/users/1/trips.json", params={"offset": 0}, result_key="results"))
+    rides = list(
+        ridewithgps.list(
+            "/users/1/trips.json", params={"offset": 0}, result_key="results"
+        )
+    )
     assert len(rides) == 3
     assert rides[0].name == "Ride 1"
     assert rides[2].name == "Ride 3"
