@@ -1,6 +1,6 @@
 # pyrwgps Agent Guide
 - **Project Scope:** Lightweight Python client for the RideWithGPS REST API. Core package lives in `pyrwgps/`; tests and VCR fixtures live under `tests/`.
-- **Dev Container:** `.devcontainer/devcontainer.json` starts from the Python 3.11 bullseye image and runs `pip3 install -e '.[dev]'` on create; add setup steps there so contributors can rebuild a fresh environment without manual pip work. Work inside the container and skip `python -m venv`; the base image already has the needed interpreter.
+- **Dev Container:** `.devcontainer/devcontainer.json` starts from the Python 3.13 bookworm image (`mcr.microsoft.com/devcontainers/python:3-3.13-bookworm`) and runs `pip3 install -e '.[dev]'` on create; add setup steps there so contributors can rebuild a fresh environment without manual pip work. **Never use `python -m venv` or any virtualenv tool**—always work directly inside the devcontainer; the base image already has the needed interpreter and all dev dependencies are installed at the system level.
 - **Primary Abstraction:** `pyrwgps.ridewithgps.RideWithGPS` extends `APIClientSharedSecret` to wrap HTTPS calls, auto-adding `apikey`, versioning, auth tokens, caching, and pagination helpers.
 - **HTTP Pipeline:** `APIClient.call` handles rate limiting (`pyrwgps/ratelimiter.py`), urllib3 requests, JSON decoding, and converts dicts/lists into `types.SimpleNamespace` trees so callers expect attribute access (keep this behaviour when adding endpoints).
 - **Auth + Params:** PATCH/POST/PUT must place `version` and `auth_token` query params in the URL while JSON payloads stay in the body (`APIClientSharedSecret._request`). Tests in `tests/test_patch_integration.py` guard this contract; update them if the split changes.
@@ -12,7 +12,7 @@
 - **Testing Workflow:** Quick feedback: `python -m pytest -m "not integration"`. Full run (requires credentials + network cassettes): `python -m pytest --cov=pyrwgps --cov-report=term-missing -v`.
 - **Integration Fixtures:** VCR cassettes live in `tests/cassettes/`. To refresh them, set `RIDEWITHGPS_EMAIL`, `RIDEWITHGPS_PASSWORD`, `RIDEWITHGPS_KEY`, run the integration tests, then scrub with `python scripts/scrub_cassettes.py` to anonymize secrets.
 - **Marker Usage:** `pytest.ini` declares the `integration` marker; sync new long-running tests with that marker so CI can toggle network usage.
-- **CI Mirror:** `.github/workflows/*.yml` run black, flake8, mypy, pylint, and pytest with `pip3 install .[dev]`; keep local commands and dependency pins aligned so CI matches devcontainer results.
+- **CI Mirror:** `.github/workflows/*.yml` run black, flake8, mypy, pylint, and pytest using `actions/checkout@v4` and `pip3 install -e '.[dev]'`; keep local commands and dependency pins aligned so CI matches devcontainer results.
 - **Make Targets:** `Makefile` exposes `make lint` (black, flake8, pylint, mypy) and `make test` (pytest with coverage). Use these before pushing; extend them instead of hand-maintaining shell scripts.
 - **Linting Standards:** Project relies on `black`, `flake8`, `mypy`, `pylint`; prefer running the exact commands from README when touching interfaces or type hints.
 - **Example Usage:** `scripts/example.py` demonstrates typical authenticate/get/list/clear_cache flow—mirror its structure for docs or new samples.
