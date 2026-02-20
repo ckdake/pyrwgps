@@ -128,7 +128,7 @@ Or, for local development with editable install:
 ```sh
 git clone https://github.com/ckdake/pyrwgps.git
 cd pyrwgps
-pip install -e . .[dev]
+pip install -e '.[dev]'
 ```
 
 ### Run tests

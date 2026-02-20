@@ -7,10 +7,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Installs packages
-        run: pip3 install .[dev]
-      - name: Install pyrwgps package (editable mode)
-        run: pip3 install -e .
+        run: pip3 install -e '.[dev]'
       - name: Runs pytest
         run: python -m pytest --cov=pyrwgps --cov-report=term-missing -v
