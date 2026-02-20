@@ -268,42 +268,55 @@ If you need to update the VCR cassettes for integration tests:
    python -m pytest --cov=pyrwgps --cov-report=term-missing -v
    ```
 
-### Publishing to PyPI
+### Publishing a Release
 
-To publish a new version of this package to [PyPI](https://pypi.org/):
+To publish a new version of this package:
 
 1. **Update the version number**  
    Edit `pyproject.toml` and increment the version. Add a new entry to [CHANGELOG.md](CHANGELOG.md).
 
-2. **Install build tools**  
+2. **Commit and push**  
+   ```sh
+   git add pyproject.toml CHANGELOG.md
+   git commit -m "Release vX.Y.Z"
+   git push
+   ```
+
+3. **Install build tools**  
    ```sh
    pip install .[dev]
    ```
 
-3. **Build the distribution**  
+4. **Build the distribution**  
    ```sh
    python -m build
    ```
    This will create `dist/pyrwgps-<version>.tar.gz` and `.whl` files.
 
-4. **Check the distribution (optional but recommended)**  
+5. **Check the distribution (optional but recommended)**  
    ```sh
    twine check dist/*
    ```
 
-5. **Upload to PyPI**  
+6. **Upload to PyPI**  
    ```sh
    twine upload dist/*
    ```
    You will be prompted for your PyPI API key.
 
-6. **Open your package on PyPI (optional)**  
+7. **Create a GitHub Release**  
+   Go to [github.com/ckdake/pyrwgps/releases/new](https://github.com/ckdake/pyrwgps/releases/new),
+   create a tag (e.g. `vX.Y.Z`) pointing at `main`, use the version as the title, and paste the
+   relevant section from [CHANGELOG.md](CHANGELOG.md) as the description. This populates the
+   Releases sidebar on the repo and gives users a permanent URL for the release notes.
+
+8. **Open your package on PyPI (optional)**  
    ```sh
    $BROWSER https://pypi.org/project/pyrwgps/
    ```
 
 **Note:**  
-- Configure your `~/.pypirc` is configured if you want to avoid entering credentials each time.
+- Configure your `~/.pypirc` if you want to avoid entering credentials each time.
 - For test uploads, use `twine upload --repository testpypi dist/*` and visit [TestPyPI](https://test.pypi.org/).
 
 ---
