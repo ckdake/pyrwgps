@@ -1,8 +1,7 @@
 import unittest
-import json
 from types import SimpleNamespace
-from unittest.mock import patch, MagicMock
-from pyrwgps.apiclient import APIClient, APIClientOAuth, APIClientSharedSecret
+from unittest.mock import MagicMock
+from pyrwgps.apiclient import APIClient
 
 
 class TestAPIClient(unittest.TestCase):
@@ -21,24 +20,6 @@ class TestAPIClient(unittest.TestCase):
         self.client.connection_pool.urlopen.assert_called_once_with(
             "GET", "https://ridewithgps.com/test/path?foo=bar", headers={}
         )
-
-
-class TestAPIClientSharedSecret(unittest.TestCase):
-    def test_compose_url_includes_api_key(self):
-        client = APIClientSharedSecret(apikey="abc123")
-        client.connection_pool = MagicMock()
-        mock_response = MagicMock()
-        mock_response.data = b'{"ok": true}'
-        client.connection_pool.urlopen.return_value = mock_response
-
-        with patch("pyrwgps.apiclient.json.loads", return_value={"ok": True}):
-            result = client.call(path="/endpoint", params={"foo": "bar"})
-            print(result)
-            self.assertEqual(result, SimpleNamespace(ok=True))
-            expected_url = "https://ridewithgps.com/endpoint?apikey=abc123&foo=bar"
-            client.connection_pool.urlopen.assert_called_once_with(
-                "GET", expected_url, headers={"x-rwgps-api-key": "abc123"}
-            )
 
 
 class TestAPIClientCaching(unittest.TestCase):
@@ -92,152 +73,6 @@ class TestAPIClientCaching(unittest.TestCase):
         self.assertEqual(
             [r.id for r in result2_page1.results + result2_page2.results], [1, 2, 3, 4]
         )
-
-
-class TestAPIClientPatchWithJSON(unittest.TestCase):
-    def setUp(self):
-        self.client = APIClientSharedSecret(apikey="test123")
-        # Create a proper mock for the connection pool
-        self.mock_pool = MagicMock()
-        self.client.connection_pool = self.mock_pool
-
-        self.mock_response = MagicMock()
-        self.mock_response.data = (
-            b'{"trip": {"id": 12345, "name": "Union County Hiking"}}'
-        )
-        self.mock_pool.urlopen.return_value = self.mock_response
-
-    def test_patch_sends_json_body_with_content_type(self):
-        """Test that PATCH requests send JSON data in body with correct content type."""
-        trip_data = {
-            "trip": {
-                "name": "Union County Hiking",
-                "description": "",
-                "visibility": 2,
-                "gear_id": 254097,
-                "activity_type": "walking:hiking",
-            }
-        }
-
-        result = self.client.call(path="/trips/12345", params=trip_data, method="PATCH")
-
-        # Verify the response
-        self.assertEqual(result.trip.name, "Union County Hiking")
-
-        # Verify the HTTP call was made correctly
-        self.mock_pool.urlopen.assert_called_once()
-        call_args = self.mock_pool.urlopen.call_args
-
-        # Check method
-        self.assertEqual(call_args[0][0], "PATCH")
-
-        # Check URL (should include API key but no trip data)
-        url = call_args[0][1]
-        self.assertIn("/trips/12345", url)
-        self.assertIn("apikey=test123", url)
-        self.assertNotIn("Union%20County", url)  # Trip data should NOT be in URL
-
-        # Check that JSON body and headers were passed
-        kwargs = call_args[1]
-        self.assertIn("body", kwargs)
-        self.assertIn("headers", kwargs)
-
-        # Verify Content-Type header
-        headers = kwargs["headers"]
-        self.assertEqual(headers["Content-Type"], "application/json")
-
-        # Verify JSON body content
-        body_data = json.loads(kwargs["body"].decode("utf-8"))
-        self.assertEqual(body_data["trip"]["name"], "Union County Hiking")
-        self.assertEqual(body_data["trip"]["gear_id"], 254097)
-        self.assertEqual(body_data["trip"]["activity_type"], "walking:hiking")
-
-    def test_patch_gear_id_real_world_example(self):
-        """Test PATCH request for setting gear_id like the real world example."""
-        gear_data = {
-            "trip": {
-                "gear_id": 254097,
-            }
-        }
-
-        result = self.client.call(
-            path="/trips/284579245", params=gear_data, method="PATCH"
-        )
-
-        # Verify the response
-        self.assertEqual(result.trip.name, "Union County Hiking")
-
-        # Verify the HTTP call was made correctly
-        self.mock_pool.urlopen.assert_called_once()
-        call_args = self.mock_pool.urlopen.call_args
-
-        # Check method
-        self.assertEqual(call_args[0][0], "PATCH")
-
-        # Check URL matches the real-world pattern
-        url = call_args[0][1]
-        self.assertIn("/trips/284579245", url)
-        self.assertIn("apikey=test123", url)
-
-        # Check that JSON body and headers were passed
-        kwargs = call_args[1]
-        self.assertIn("body", kwargs)
-        self.assertIn("headers", kwargs)
-
-        # Verify Content-Type header
-        headers = kwargs["headers"]
-        self.assertEqual(headers["Content-Type"], "application/json")
-
-        # Verify JSON body content matches the exact structure
-        body_data = json.loads(kwargs["body"].decode("utf-8"))
-        self.assertEqual(body_data["trip"]["gear_id"], 254097)
-        self.assertEqual(len(body_data["trip"]), 1)  # Only gear_id should be present
-
-
-class TestAPIClientOAuth(unittest.TestCase):
-    def setUp(self):
-        self.client = APIClientOAuth(client_id="cid", client_secret="csec")
-        self.client.connection_pool = MagicMock()
-        self.mock_response = MagicMock()
-        self.client.connection_pool.urlopen.return_value = self.mock_response
-
-    def test_authorization_url(self):
-        url = self.client.authorization_url("https://app.example.com/callback")
-        self.assertIn("client_id=cid", url)
-        self.assertIn("response_type=code", url)
-        self.assertIn("redirect_uri=https%3A%2F%2Fapp.example.com%2Fcallback", url)
-        self.assertTrue(url.startswith("https://ridewithgps.com/oauth/authorize"))
-
-    def test_exchange_code_stores_access_token(self):
-        self.mock_response.data = b'{"access_token": "tok123", "token_type": "Bearer"}'
-        self.client.exchange_code("mycode", "https://app.example.com/callback")
-        self.assertEqual(self.client.access_token, "tok123")
-
-    def test_request_adds_bearer_header(self):
-        self.client.access_token = "mytoken"
-        self.mock_response.data = b'{"ok": true}'
-        self.client.call(path="/api/v1/users/current.json")
-        call_args = self.client.connection_pool.urlopen.call_args
-        headers = call_args[1].get("headers") or call_args[0][2]
-        self.assertEqual(headers.get("Authorization"), "Bearer mytoken")
-
-    def test_request_no_auth_header_without_token(self):
-        self.mock_response.data = b'{"ok": true}'
-        self.client.call(path="/api/v1/users/current.json")
-        call_args = self.client.connection_pool.urlopen.call_args
-        headers = call_args[1].get("headers", {})
-        self.assertNotIn("Authorization", headers)
-
-    def test_exchange_code_sends_correct_params(self):
-        self.mock_response.data = b'{"access_token": "tok", "token_type": "Bearer"}'
-        self.client.exchange_code("code42", "https://app.example.com/cb")
-        call_args = self.client.connection_pool.urlopen.call_args
-        body = json.loads(call_args[1]["body"])
-        self.assertEqual(body["grant_type"], "authorization_code")
-        self.assertEqual(body["code"], "code42")
-        self.assertEqual(body["client_id"], "cid")
-        self.assertEqual(body["client_secret"], "csec")
-        self.assertEqual(body["redirect_uri"], "https://app.example.com/cb")
 
 
 if __name__ == "__main__":

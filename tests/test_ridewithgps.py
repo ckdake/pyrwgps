@@ -95,15 +95,19 @@ class DummyAPIClient:
 
 
 @pytest.fixture
-def client(monkeypatch):
+def client():
+    original_bases = RideWithGPS.__bases__
     RideWithGPS.__bases__ = (DummyAPIClient,)
-    return RideWithGPS(apikey="dummykey")
+    yield RideWithGPS(apikey="dummykey")
+    RideWithGPS.__bases__ = original_bases
 
 
 @pytest.fixture
-def oauth_client(monkeypatch):
+def oauth_client():
+    original_bases = RideWithGPS.__bases__
     RideWithGPS.__bases__ = (DummyAPIClient,)
-    return RideWithGPS(client_id="cid", client_secret="csec")
+    yield RideWithGPS(client_id="cid", client_secret="csec")
+    RideWithGPS.__bases__ = original_bases
 
 
 # ------------------------------------------------------------------

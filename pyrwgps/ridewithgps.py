@@ -33,7 +33,7 @@ class RideWithGPS(APIClient):
     _OAUTH_AUTHORIZE_URL = "https://ridewithgps.com/oauth/authorize"
     _OAUTH_TOKEN_PATH = "/oauth/token.json"
 
-    def __init__(
+    def __init__(  # pylint: disable=too-many-arguments
         self,
         *args: object,
         apikey: Optional[str] = None,
@@ -119,7 +119,7 @@ class RideWithGPS(APIClient):
         """
         if not self._oauth:
             raise ValueError(
-                "exchange_code() is for OAuth. " "For API key auth, use authenticate()."
+                "exchange_code() is for OAuth. For API key auth, use authenticate()."
             )
         params = {
             "grant_type": "authorization_code",
@@ -147,6 +147,27 @@ class RideWithGPS(APIClient):
         base_url = self.BASE_URL.rstrip("/")
         return f"{base_url}/{path.lstrip('/')}?" + urlencode(p)
 
+    def _request_apikey_mutating(self, method, path, params, extra_headers):
+        """Handle POST/PUT/PATCH for API key auth (JSON body, apikey in URL)."""
+        query_params = {"apikey": self.apikey}
+        body_params = {}
+        if params:
+            for key, value in params.items():
+                if key in ("version", "auth_token"):
+                    query_params[key] = value
+                else:
+                    body_params[key] = value
+        base_url = self.BASE_URL.rstrip("/")
+        url = f"{base_url}/{path.lstrip('/')}?" + urlencode(query_params)
+        headers = {"Content-Type": "application/json", "x-rwgps-api-key": self.apikey}
+        if "auth_token" in query_params:
+            headers["x-rwgps-auth-token"] = query_params["auth_token"]
+        if extra_headers:
+            headers.update(extra_headers)
+        body = json.dumps(body_params).encode(self.encoding)
+        r = self._urlopen(method, url, body=body, headers=headers)
+        return self._handle_response(r)
+
     def _request(self, method, path, params=None, extra_headers=None):
         """Apply auth appropriate for the active auth method."""
         if self._oauth:
@@ -157,41 +178,18 @@ class RideWithGPS(APIClient):
                 headers.update(extra_headers)
             return super()._request(method, path, params=params, extra_headers=headers)
 
-        # API key auth: inject apikey into URL; version/auth_token stay in query string
         method = method.upper()
         if method in ("POST", "PUT", "PATCH"):
-            query_params = {"apikey": self.apikey}
-            body_params = {}
-            if params:
-                for key, value in params.items():
-                    if key in ("version", "auth_token"):
-                        query_params[key] = value
-                    else:
-                        body_params[key] = value
-            base_url = self.BASE_URL.rstrip("/")
-            url = f"{base_url}/{path.lstrip('/')}?" + urlencode(query_params)
-            headers = {
-                "Content-Type": "application/json",
-                "x-rwgps-api-key": self.apikey,
-            }
-            if "auth_token" in query_params:
-                headers["x-rwgps-auth-token"] = query_params["auth_token"]
-            if extra_headers:
-                headers.update(extra_headers)
-            body = json.dumps(body_params).encode(self.encoding)
-            if self.rate_limit_lock:
-                self.rate_limit_lock.acquire()
-            r = self.connection_pool.urlopen(method, url, body=body, headers=headers)
-        else:
-            url = self._compose_url(path, params)
-            headers = {"x-rwgps-api-key": self.apikey}
-            if params and "auth_token" in params:
-                headers["x-rwgps-auth-token"] = params["auth_token"]
-            if extra_headers:
-                headers.update(extra_headers)
-            if self.rate_limit_lock:
-                self.rate_limit_lock.acquire()
-            r = self.connection_pool.urlopen(method, url, headers=headers)
+            return self._request_apikey_mutating(method, path, params, extra_headers)
+
+        # GET / DELETE — params go into query string
+        url = self._compose_url(path, params)
+        headers = {"x-rwgps-api-key": self.apikey}
+        if params and "auth_token" in params:
+            headers["x-rwgps-auth-token"] = params["auth_token"]
+        if extra_headers:
+            headers.update(extra_headers)
+        r = self._urlopen(method, url, headers=headers)
         return self._handle_response(r)
 
     def call(

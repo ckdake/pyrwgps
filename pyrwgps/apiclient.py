@@ -77,6 +77,12 @@ class APIClient:
             # If it's not valid JSON, return the raw text in a simple object
             return {"response_text": response_data}
 
+    def _urlopen(self, method, url, **kwargs):
+        """Rate-limited HTTP call. Acquires rate_limit_lock if set."""
+        if self.rate_limit_lock:
+            self.rate_limit_lock.acquire()
+        return self.connection_pool.urlopen(method, url, **kwargs)
+
     def _request(self, method, path, params=None, extra_headers=None):
         """Make an HTTP request and return the parsed response."""
         method = method.upper()
@@ -90,17 +96,12 @@ class APIClient:
             if extra_headers:
                 headers.update(extra_headers)
             body = json.dumps(params or {}).encode(self.encoding)
-
-            if self.rate_limit_lock:
-                self.rate_limit_lock.acquire()
-            r = self.connection_pool.urlopen(method, url, body=body, headers=headers)
+            r = self._urlopen(method, url, body=body, headers=headers)
         else:
             # For GET/DELETE, use query parameters
             url = self._compose_url(path, params)
             headers = extra_headers or {}
-            if self.rate_limit_lock:
-                self.rate_limit_lock.acquire()
-            r = self.connection_pool.urlopen(method, url, headers=headers)
+            r = self._urlopen(method, url, headers=headers)
 
         return self._handle_response(r)
 
