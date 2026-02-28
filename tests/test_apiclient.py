@@ -205,9 +205,7 @@ class TestAPIClientOAuth(unittest.TestCase):
         url = self.client.authorization_url("https://app.example.com/callback")
         self.assertIn("client_id=cid", url)
         self.assertIn("response_type=code", url)
-        self.assertIn(
-            "redirect_uri=https%3A%2F%2Fapp.example.com%2Fcallback", url
-        )
+        self.assertIn("redirect_uri=https%3A%2F%2Fapp.example.com%2Fcallback", url)
         self.assertTrue(url.startswith("https://ridewithgps.com/oauth/authorize"))
 
     def test_exchange_code_stores_access_token(self):

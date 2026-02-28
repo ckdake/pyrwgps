@@ -119,8 +119,7 @@ class RideWithGPS(APIClient):
         """
         if not self._oauth:
             raise ValueError(
-                "exchange_code() is for OAuth. "
-                "For API key auth, use authenticate()."
+                "exchange_code() is for OAuth. " "For API key auth, use authenticate()."
             )
         params = {
             "grant_type": "authorization_code",
