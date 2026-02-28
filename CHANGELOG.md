@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-02-28
+
+### Added
+
+- **OAuth 2.0 support** — `RideWithGPS` now accepts `client_id=` + `client_secret=` to use
+  the OAuth 2.0 authorization code flow. Use `authorization_url()` to redirect users and
+  `exchange_code()` to obtain an access token. Requests are authenticated with
+  `Authorization: Bearer <token>`.
+- Both auth methods are supported by the single `RideWithGPS` class; the constructor
+  determines the mode based on which credentials are supplied.
+
 ## [0.1.0] - 2026-02-20
 
 First release tracked in this changelog.
