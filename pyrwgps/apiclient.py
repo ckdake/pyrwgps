@@ -4,7 +4,7 @@ import json
 from urllib.parse import urlencode
 
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, Optional
 
 import urllib3
 import certifi
@@ -161,6 +161,62 @@ class APIClient:
         """
         if isinstance(self._cache, dict):
             self._cache.clear()
+
+
+class APIClientOAuth(APIClient):
+    """API client that authenticates via OAuth 2.0 Bearer tokens."""
+
+    OAUTH_AUTHORIZE_URL = "https://ridewithgps.com/oauth/authorize"
+    OAUTH_TOKEN_PATH = "/oauth/token.json"
+
+    def __init__(
+        self,
+        *args,
+        client_id: str,
+        client_secret: str,
+        access_token: Optional[str] = None,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.access_token = access_token
+
+    def authorization_url(self, redirect_uri: str) -> str:
+        """Return the URL to redirect users to for OAuth authorization."""
+        params = {
+            "client_id": self.client_id,
+            "redirect_uri": redirect_uri,
+            "response_type": "code",
+        }
+        return self.OAUTH_AUTHORIZE_URL + "?" + urlencode(params)
+
+    def exchange_code(self, code: str, redirect_uri: str) -> Any:
+        """Exchange an authorization code for an access token.
+
+        Stores the resulting access_token for subsequent requests.
+        Returns the full token response as a SimpleNamespace object.
+        """
+        params = {
+            "grant_type": "authorization_code",
+            "code": code,
+            "client_id": self.client_id,
+            "client_secret": self.client_secret,
+            "redirect_uri": redirect_uri,
+        }
+        response = self._request("POST", self.OAUTH_TOKEN_PATH, params=params)
+        if isinstance(response, dict):
+            self.access_token = response.get("access_token")
+        return self._to_obj(response)
+
+    def _request(self, method, path, params=None, extra_headers=None):
+        """Make an HTTP request with Bearer token authentication."""
+        headers = {}
+        if self.access_token:
+            headers["Authorization"] = f"Bearer {self.access_token}"
+        if extra_headers:
+            headers.update(extra_headers)
+        return super()._request(method, path, params=params, extra_headers=headers)
 
 
 class APIClientSharedSecret(APIClient):

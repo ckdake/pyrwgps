@@ -72,7 +72,7 @@ my_vcr = vcr.VCR(
 def test_fetch_20_rides():
     username = os.environ.get("RIDEWITHGPS_EMAIL")
     password = os.environ.get("RIDEWITHGPS_PASSWORD")
-    apikey = os.environ.get("RIDEWITHGPS_KEY")
+    apikey = os.environ.get("RIDEWITHGPS_KEY", "DUMMY")
 
     client = RideWithGPS(apikey=apikey)
     user_info = client.authenticate(email=username, password=password)
@@ -106,7 +106,7 @@ def test_fetch_20_rides():
 def test_list_limit_30():
     username = os.environ.get("RIDEWITHGPS_EMAIL")
     password = os.environ.get("RIDEWITHGPS_PASSWORD")
-    apikey = os.environ.get("RIDEWITHGPS_KEY")
+    apikey = os.environ.get("RIDEWITHGPS_KEY", "DUMMY")
 
     client = RideWithGPS(apikey=apikey)
     user_info = client.authenticate(email=username, password=password)

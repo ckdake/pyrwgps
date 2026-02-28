@@ -8,7 +8,7 @@ A simple Python client for the [RideWithGPS API](https://ridewithgps.com/api/v1/
 >
 > **API versions:** RideWithGPS has a v1 API (`/api/v1/...`) and a legacy API (no version prefix). This client supports both, but v1 coverage is incomplete. See [API Versions](#api-versions) for a full breakdown of what uses v1 vs legacy.
 
-> **Authentication:** No OAuth required. `authenticate()` uses the v1 Basic auth endpoint (`POST /api/v1/auth_tokens.json`) with your existing API key. The returned token works for both v1 and legacy endpoints.
+> **Authentication:** Two methods are supported via the same `RideWithGPS` class: API key and OAuth 2.0. See [Authentication](#authentication) for details.
 
 [![PyPI version](https://img.shields.io/pypi/v/pyrwgps.svg)](https://pypi.org/project/pyrwgps/)
 [![PyPI downloads](https://img.shields.io/pypi/dm/pyrwgps.svg)](https://pypi.org/project/pyrwgps/)
@@ -23,7 +23,7 @@ A simple Python client for the [RideWithGPS API](https://ridewithgps.com/api/v1/
 
 ## Features
 
-- Authenticates with the [RideWithGPS API](https://ridewithgps.com/api/v1/doc)
+- Single `RideWithGPS` client supporting both **API key** and **OAuth 2.0** authentication.
 - Makes any API request — `get`, `put`, `post`, `patch`, `delete` — to v1 or legacy endpoints.
 - Built-in rate limiting, caching, and pagination.
 - Use higher-level abstractions like `list` to iterate collections with automatic pagination.
@@ -93,6 +93,60 @@ event = client.post(
 )
 ```
 
+## Authentication
+
+`RideWithGPS` supports two authentication methods. Pass the appropriate credentials at init time.
+
+### API key (shared secret)
+
+Simple option for scripts or server-side access to your own account.
+
+```python
+from pyrwgps import RideWithGPS
+
+client = RideWithGPS(apikey="yourapikey")
+user = client.authenticate(email="your@email.com", password="yourpassword")
+```
+
+### OAuth 2.0
+
+For applications acting on behalf of users without handling their password. Requires a registered
+API client — see [RideWithGPS authentication docs](https://ridewithgps.com/api/v1/doc/authentication).
+
+**Full authorization code flow:**
+
+```python
+from pyrwgps import RideWithGPS
+
+client = RideWithGPS(client_id="your_client_id", client_secret="your_client_secret")
+
+# Step 1: redirect the user to this URL
+auth_url = client.authorization_url(redirect_uri="https://yourapp.com/callback")
+print(f"Redirect user to: {auth_url}")
+
+# Step 2: after the user grants access, exchange the code from ?code=...
+client.exchange_code(code="code_from_redirect", redirect_uri="https://yourapp.com/callback")
+
+# Step 3: make authenticated API calls
+user = client.get(path="/api/v1/users/current.json")
+print(user.user.display_name)
+```
+
+**With an existing access token:**
+
+```python
+client = RideWithGPS(
+    client_id="your_client_id",
+    client_secret="your_client_secret",
+    access_token="your_stored_token",
+)
+user = client.get(path="/api/v1/users/current.json")
+```
+
+Both auth methods expose the same `get`, `put`, `post`, `patch`, `delete`, and `list` methods.
+
+---
+
 ## Installation
 
 The package is published on [PyPI](https://pypi.org/project/pyrwgps/).
@@ -107,7 +161,7 @@ First, install the package:
 pip install pyrwgps
 ```
 
-Then, in your Python code:
+Then, in your Python code (API key example — see [Authentication](#authentication) for both methods):
 
 ```python
 from pyrwgps import RideWithGPS

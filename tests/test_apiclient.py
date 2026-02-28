@@ -2,7 +2,7 @@ import unittest
 import json
 from types import SimpleNamespace
 from unittest.mock import patch, MagicMock
-from pyrwgps.apiclient import APIClient, APIClientSharedSecret
+from pyrwgps.apiclient import APIClient, APIClientOAuth, APIClientSharedSecret
 
 
 class TestAPIClient(unittest.TestCase):
@@ -46,7 +46,7 @@ class TestAPIClientCaching(unittest.TestCase):
         self.client = APIClient(cache=True)
         self.client.connection_pool = MagicMock()
         self.mock_response = MagicMock()
-        # Simulate a paginated API: first call returns 2 items, second call returns 2 more, then empty
+        # Simulate a paginated API: first call returns 2 items, second 2 more, then empty
         self.responses = [
             b'{"results": [{"id": 1}, {"id": 2}], "results_count": 4}',
             b'{"results": [{"id": 3}, {"id": 4}], "results_count": 4}',
@@ -192,6 +192,54 @@ class TestAPIClientPatchWithJSON(unittest.TestCase):
         body_data = json.loads(kwargs["body"].decode("utf-8"))
         self.assertEqual(body_data["trip"]["gear_id"], 254097)
         self.assertEqual(len(body_data["trip"]), 1)  # Only gear_id should be present
+
+
+class TestAPIClientOAuth(unittest.TestCase):
+    def setUp(self):
+        self.client = APIClientOAuth(client_id="cid", client_secret="csec")
+        self.client.connection_pool = MagicMock()
+        self.mock_response = MagicMock()
+        self.client.connection_pool.urlopen.return_value = self.mock_response
+
+    def test_authorization_url(self):
+        url = self.client.authorization_url("https://app.example.com/callback")
+        self.assertIn("client_id=cid", url)
+        self.assertIn("response_type=code", url)
+        self.assertIn(
+            "redirect_uri=https%3A%2F%2Fapp.example.com%2Fcallback", url
+        )
+        self.assertTrue(url.startswith("https://ridewithgps.com/oauth/authorize"))
+
+    def test_exchange_code_stores_access_token(self):
+        self.mock_response.data = b'{"access_token": "tok123", "token_type": "Bearer"}'
+        self.client.exchange_code("mycode", "https://app.example.com/callback")
+        self.assertEqual(self.client.access_token, "tok123")
+
+    def test_request_adds_bearer_header(self):
+        self.client.access_token = "mytoken"
+        self.mock_response.data = b'{"ok": true}'
+        self.client.call(path="/api/v1/users/current.json")
+        call_args = self.client.connection_pool.urlopen.call_args
+        headers = call_args[1].get("headers") or call_args[0][2]
+        self.assertEqual(headers.get("Authorization"), "Bearer mytoken")
+
+    def test_request_no_auth_header_without_token(self):
+        self.mock_response.data = b'{"ok": true}'
+        self.client.call(path="/api/v1/users/current.json")
+        call_args = self.client.connection_pool.urlopen.call_args
+        headers = call_args[1].get("headers", {})
+        self.assertNotIn("Authorization", headers)
+
+    def test_exchange_code_sends_correct_params(self):
+        self.mock_response.data = b'{"access_token": "tok", "token_type": "Bearer"}'
+        self.client.exchange_code("code42", "https://app.example.com/cb")
+        call_args = self.client.connection_pool.urlopen.call_args
+        body = json.loads(call_args[1]["body"])
+        self.assertEqual(body["grant_type"], "authorization_code")
+        self.assertEqual(body["code"], "code42")
+        self.assertEqual(body["client_id"], "cid")
+        self.assertEqual(body["client_secret"], "csec")
+        self.assertEqual(body["redirect_uri"], "https://app.example.com/cb")
 
 
 if __name__ == "__main__":
