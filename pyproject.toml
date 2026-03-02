@@ -21,7 +21,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = [
-  "certifi==2026.1.4",
+  "certifi==2026.2.25",
   "urllib3==2.6.3",
   "build==1.4.0",
   "twine==6.2.0",
