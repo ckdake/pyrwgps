@@ -262,6 +262,47 @@ class RideWithGPS(APIClient):
         """Make a DELETE request to the API and return a Python object."""
         return self.call(*args, path=path, params=params, method="DELETE", **kwargs)
 
+    # ------------------------------------------------------------------
+    # File download
+    # ------------------------------------------------------------------
+
+    _DOWNLOAD_FORMATS = ("gpx", "tcx", "kml")
+
+    def download_trip_file(self, trip_id: int, file_format: str) -> bytes:
+        """Download a trip as a raw file (GPX, TCX, or KML).
+
+        File downloads are not available in the v1 API; this uses the legacy
+        endpoint (``GET /trips/{id}.{format}``).
+
+        Args:
+            trip_id: Numeric trip ID.
+            file_format: One of ``"gpx"``, ``"tcx"``, or ``"kml"``.
+
+        Returns:
+            Raw file content as bytes.
+        """
+        if file_format not in self._DOWNLOAD_FORMATS:
+            raise ValueError(
+                f"file_format must be one of {self._DOWNLOAD_FORMATS!r}, got {file_format!r}"
+            )
+        path = f"/trips/{trip_id}.{file_format}"
+        self.ratelimiter.acquire()
+        if self._oauth:
+            url = self._compose_url(path)
+            headers: Dict[str, Any] = {}
+            if self.access_token:
+                headers["Authorization"] = f"Bearer {self.access_token}"
+        else:
+            params: Dict[str, Any] = {"apikey": self.apikey}
+            if self.auth_token:
+                params["auth_token"] = self.auth_token
+            url = self._compose_url(path, params)
+            headers = {"x-rwgps-api-key": self.apikey}
+            if self.auth_token:
+                headers["x-rwgps-auth-token"] = self.auth_token
+        r = self._urlopen("GET", url, headers=headers)
+        return r.data
+
     def _list_v1(self, path, params, limit, result_key, **kwargs):
         """Yield items from a v1 API endpoint using page/page_size pagination."""
         page_size = params.get("page_size", 100)

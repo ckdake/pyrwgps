@@ -1,9 +1,9 @@
 import pytest
 import json
 from types import SimpleNamespace
-from typing import Any, Dict, Optional
+from typing import Any
+from unittest.mock import Mock, patch
 
-from pyrwgps.apiclient import APIError
 from pyrwgps.ridewithgps import RideWithGPS
 
 
@@ -246,3 +246,91 @@ def test_authorization_url_raises_on_apikey_client(client):
 def test_init_requires_credentials():
     with pytest.raises(ValueError):
         RideWithGPS()
+
+
+# ------------------------------------------------------------------
+# download_trip_file
+# ------------------------------------------------------------------
+
+
+def _make_apikey_client():
+    """Return a real RideWithGPS (API key) client with a mocked connection pool."""
+    client = RideWithGPS(apikey="testkey")
+    client.auth_token = "testtoken"
+    return client
+
+
+def _make_oauth_client():
+    """Return a real RideWithGPS (OAuth) client with a mocked connection pool."""
+    return RideWithGPS(client_id="cid", client_secret="csec", access_token="oauthtoken")
+
+
+def _fake_response(content: bytes) -> Mock:
+    r = Mock()
+    r.data = content
+    return r
+
+
+def test_download_trip_file_gpx_apikey():
+    """Returns raw bytes and builds the correct legacy URL for API key auth."""
+    client = _make_apikey_client()
+    fake_gpx = b"<?xml version='1.0'?><gpx></gpx>"
+
+    with patch.object(client, "_urlopen", return_value=_fake_response(fake_gpx)) as m:
+        with patch.object(client.ratelimiter, "acquire"):
+            result = client.download_trip_file(123, "gpx")
+
+    assert result == fake_gpx
+    url = m.call_args[0][1]
+    assert "/trips/123.gpx" in url
+    assert "apikey=testkey" in url
+    assert "auth_token=testtoken" in url
+
+
+def test_download_trip_file_includes_auth_headers_apikey():
+    """API key auth sets x-rwgps-api-key and x-rwgps-auth-token headers."""
+    client = _make_apikey_client()
+
+    with patch.object(client, "_urlopen", return_value=_fake_response(b"")) as m:
+        with patch.object(client.ratelimiter, "acquire"):
+            client.download_trip_file(456, "tcx")
+
+    headers = m.call_args[1]["headers"]
+    assert headers.get("x-rwgps-api-key") == "testkey"
+    assert headers.get("x-rwgps-auth-token") == "testtoken"
+
+
+def test_download_trip_file_kml_apikey():
+    """KML format builds the correct legacy URL."""
+    client = _make_apikey_client()
+
+    with patch.object(client, "_urlopen", return_value=_fake_response(b"<kml/>")) as m:
+        with patch.object(client.ratelimiter, "acquire"):
+            client.download_trip_file(789, "kml")
+
+    url = m.call_args[0][1]
+    assert "/trips/789.kml" in url
+
+
+def test_download_trip_file_oauth():
+    """OAuth auth sets the Authorization header and does not embed apikey in URL."""
+    client = _make_oauth_client()
+    fake_gpx = b"<gpx/>"
+
+    with patch.object(client, "_urlopen", return_value=_fake_response(fake_gpx)) as m:
+        with patch.object(client.ratelimiter, "acquire"):
+            result = client.download_trip_file(99, "gpx")
+
+    assert result == fake_gpx
+    url = m.call_args[0][1]
+    assert "/trips/99.gpx" in url
+    assert "apikey" not in url
+    headers = m.call_args[1]["headers"]
+    assert headers.get("Authorization") == "Bearer oauthtoken"
+
+
+def test_download_trip_file_invalid_format():
+    """Raises ValueError for unsupported file formats."""
+    client = _make_apikey_client()
+    with pytest.raises(ValueError, match="file_format must be one of"):
+        client.download_trip_file(123, "fit")

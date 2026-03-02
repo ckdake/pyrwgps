@@ -76,7 +76,7 @@ class TestPatchIntegration(unittest.TestCase):
         # Simulate authenticated user
         self.client.auth_token = "fake_auth_token"
 
-        response = self.client.patch(
+        self.client.patch(
             path="/trips/284579245",
             params={
                 "trip": {

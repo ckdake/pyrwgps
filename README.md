@@ -61,6 +61,7 @@ These are **not available on v1** and require the legacy endpoints:
 | Update trip | `/trips/{id}.json` (PUT/PATCH) | v1 trips is read/delete only |
 | Create route | `/routes.json` (POST) | v1 routes is read/delete only |
 | Update route | `/routes/{id}.json` (PUT/PATCH) | v1 routes is read/delete only |
+| Download trip file | `/trips/{id}.gpx`, `.tcx`, `.kml` | No v1 file-download endpoint exists |
 
 ## v1 API
 
@@ -143,7 +144,8 @@ client = RideWithGPS(
 user = client.get(path="/api/v1/users/current.json")
 ```
 
-Both auth methods expose the same `get`, `put`, `post`, `patch`, `delete`, and `list` methods.
+Both auth methods expose the same `get`, `put`, `post`, `patch`, `delete`, `list`, and
+`download_trip_file` methods.
 
 ---
 
@@ -219,13 +221,22 @@ for g in client.list(
 ):
     gear[g.id] = g.nickname
 print(gear)
+
+# Download a trip as a GPX file (legacy API — no v1 file-download endpoint yet)
+with open("trip_123.gpx", "wb") as f:
+    f.write(client.download_trip_file(123456, "gpx"))
+
+# TCX and KML formats are also supported
+tcx_bytes = client.download_trip_file(123456, "tcx")
+kml_bytes = client.download_trip_file(123456, "kml")
 ```
 
-**Note:**  
+**Note:**
 - All API responses are automatically converted from JSON to Python objects with attribute access.
 - You must provide your own RideWithGPS credentials and API key.
 - Use v1 endpoints (`/api/v1/...`) for trips, routes, collections, events, club members, points of interest, and sync. See the [v1 API section](#v1-api) for what is and isn't available.
-- The `list`, `get`, `put`, `post`, `patch` and `delete` methods are the recommended interface for making API requests; see the code and [RideWithGPS API docs](https://ridewithgps.com/api/v1/doc) for available endpoints and parameters.
+- The `list`, `get`, `put`, `post`, `patch`, `delete`, and `download_trip_file` methods are the recommended interface for making API requests; see the code and [RideWithGPS API docs](https://ridewithgps.com/api/v1/doc) for available endpoints and parameters.
+- `download_trip_file(trip_id, file_format)` returns raw `bytes` (not a Python object); write directly to a file or process as needed. Supported formats: `"gpx"`, `"tcx"`, `"kml"`.
 
 ---
 
