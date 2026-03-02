@@ -76,6 +76,11 @@ For `list`, pass `result_key` matching the response root key:
 for trip in client.list("/api/v1/trips.json", result_key="trips"):
     print(trip.name, trip.id)
 
+# Download the TCX file for the most recent trip (legacy API)
+most_recent = next(client.list("/api/v1/trips.json", result_key="trips", limit=1))
+with open(f"trip_{most_recent.id}.tcx", "wb") as f:
+    f.write(client.download_trip_file(most_recent.id, "tcx"))
+
 # List routes, up to 50 (v1)
 for route in client.list("/api/v1/routes.json", result_key="routes", limit=50):
     print(route.name, route.id)
