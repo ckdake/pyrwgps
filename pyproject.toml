@@ -23,7 +23,7 @@ dependencies = [
 dev = [
   "certifi==2026.2.25",
   "urllib3==2.6.3",
-  "build==1.4.0",
+  "build==1.4.3",
   "twine==6.2.0",
   "pylint==4.0.5",
   "black==26.1.0",
